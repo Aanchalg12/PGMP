@@ -1,0 +1,22 @@
+<!-- order_confirmation.html -->
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %}Order Confirmation{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Order Confirmation</h2>
+    </div>
+
+    <div class="confirmation-summary">
+        <h3>Thank you for your order!</h3>
+        <p>Your order has been placed successfully. Below are your order details:</p>
+        <ul>
+            {% for order in orders %}
+                <li>Order #{{ order.id }} - Product: {{ order.product.name }} (x{{ order.quantity }}) - Vendor: {{ order.vendor_profile.user.username }} - Status: {{ order.status }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</main>
+{% endblock %}

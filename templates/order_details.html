@@ -1,0 +1,81 @@
+<!-- order_details.html -->
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %} Order Details {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Order Details</h2>
+    </div>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Order ID: {{ order.id }}</h5>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <th scope="row">Customer</th>
+                        <td>
+                            {% if order.customer_profile %}
+                                {{ order.customer_profile.user.username }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Customer Email</th>
+                        <td>
+                            {% if order.customer_profile %}
+                                {{ order.customer_profile.user.email }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Vendor</th>
+                        <td>
+                            {% if order.vendor_profile %}
+                                {{ order.vendor_profile.user.username }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Vendor Email</th>
+                        <td>
+                            {% if order.vendor_profile %}
+                                {{ order.vendor_profile.user.email }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Product</th>
+                        <td>{{ order.product.name }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Quantity</th>
+                        <td>{{ order.quantity }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Status</th>
+                        <td>{{ order.status }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Order Date</th>
+                        <td>{{ order.order_date }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Total Price</th>
+                        <td>£{{ total_price }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
+{% endblock %}

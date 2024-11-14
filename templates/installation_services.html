@@ -1,0 +1,55 @@
+{% extends 'base1.html' %}
+
+{% block title %}All Installation Services{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">All Installation Services</h1>
+
+        <!-- Get Quote Button -->
+        <div>
+            {% if last_estimation %}
+                <a href="{% url 'get_quote' last_estimation.id %}" class="btn btn-success">Get Quote </a>
+            {% else %}
+                <span>No previous estimation available</span>
+            {% endif %}
+        </div>
+    </div>
+
+    
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Installer Name</th>
+                <th>Service Name</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th>Panel Size Range</th>
+                <th>Installer Address</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for service in services %}
+            <tr>
+                <td>{{ service.installer.user.username }}</td>
+                <td>{{ service.service_name }}</td>
+                <td>{{ service.description }}</td>
+                <td>£{{ service.price }}</td>
+                <td>{{ service.panel_size_range_min }} kW to {{ service.panel_size_range_max }} kW</td>
+                <td>{{ service.installer.user.profile.address }}</td>
+                <td>
+                    <a href="{% url 'book_service' service.id %}" class="btn btn-success">Book Now</a>
+                    
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No services available at the moment.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+{% endblock %}

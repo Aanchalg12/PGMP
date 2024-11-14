@@ -1,0 +1,71 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %}Solar Panel Estimation Result{% endblock %}
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Solar Panel Estimation Result</h2>
+    </div>
+    
+    <div class="card shadow-sm p-4 mb-4">
+        <h3 class="text-center mb-4">Your Solar Panel Estimation</h3>
+        
+        <!-- Coordinates Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Longitude:</strong> {{ longitude }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Latitude:</strong> {{ latitude }}</p>
+            </div>
+        </div>
+
+        <!-- Irradiance and Panel Size Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Average Solar Irradiance:</strong></p>
+                <div class="alert alert-info">
+                    {{ solar_irradiance }} kWh/m²/day
+                </div>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Estimated Solar Panel Size Required:</strong></p>
+                <div class="alert alert-success">
+                    {{ estimated_size_kw }} kW
+                </div>
+            </div>
+        </div>
+
+        <!-- New Savings and Payback Information Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Estimated Annual Savings:</strong></p>
+                <div class="alert alert-primary">
+                    £{{ annual_savings }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Installation Cost:</strong></p>
+                <div class="alert alert-warning">
+                    £{{ installation_cost }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Payback Period -->
+        <div class="row">
+            <div class="col-md-12">
+                <p><strong>Estimated Payback Period:</strong></p>
+                <div class="alert alert-dark text-center">
+                    {{ payback_period_years }} years
+                </div>
+            </div>
+        </div>
+
+        <!-- Button to return to the estimation form -->
+        <div class="text-center mt-4">
+            <a href="{% url 'estimate_solar_size' %}" class="btn btn-primary">Go Back to Estimation Form</a>
+        </div>
+    </div>
+</main>
+{% endblock %}

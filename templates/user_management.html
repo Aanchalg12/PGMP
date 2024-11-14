@@ -1,0 +1,44 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %} User Management {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 ">
+    <h1>User Management</h1>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-info">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <a href="{% url 'add_user' %}" class="btn btn-primary mb-3">Add New User</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.profile.user_role|default:"N/A" }}</td>
+                    <td>
+                        <a href="{% url 'user_detail' user.id %}" class="btn btn-success btn-sm">Read</a>
+                        <a href="{% url 'edit_user' user.id %}" class="btn btn-primary btn-sm">Edit</a>
+                        <a href="{% url 'delete_user' user.id %}" class="btn btn-danger btn-sm">Delete</a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="4">No users found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+{% endblock %}

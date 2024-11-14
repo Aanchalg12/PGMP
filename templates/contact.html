@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{%block title %} About Us{% endblock %}
+
+{% block content %}
+<section class="p-5 mt-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4">
+                <img src="{% static "img/solar.jpg" %}" alt="About Us" class="img-fluid d-none d-sm-block">
+            </div>
+            <div class="col-lg-6">
+                <h2 class="mb-4">Contact Us</h2>
+
+                <p>We’re here to help! If you have any questions or need assistance with our Solar Panel Estimator, feel free to reach out. Whether you're looking for technical support, more information on solar energy, or have feedback, we’d love to hear from you.<p>
+                <h5>   Get in Touch:</h5>
+                <p>    Email: support@greensolarpanel.com </p>
+                <p>    Phone: 07894561238</p>
+                <p>    Business Hours: Monday to Friday, 9 AM - 5 PM (BST)</p>
+                <h5>    Follow Us on Social Media:</h5>
+                <p>    Twitter: @GreenSolarPanel</p>
+                <p>    Facebook: GreenSolarPanel</p>
+                <p>    LinkedIn: GreenSolarPanel</p>
+                <p>    Let’s work together to build a brighter, more sustainable future!</p>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

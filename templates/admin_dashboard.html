@@ -1,0 +1,77 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %} Admin Dashboard {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Dashboard</h1>
+    </div>
+
+    <div class="row">
+        <!-- Card for Customer -->
+        <div class="col-lg-3 mb-3">
+            <div class="card card1 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title">Customer</h5>
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <p class="card-text">
+                        <span class="fw-bold fs-1">{{ customer_count }}</span>
+                        Total Customers
+                    </p>
+                </div>
+            </div>                       
+        </div>
+
+        <!-- Card for Vendor Management -->
+        <div class="col-lg-3 mb-3">
+            <div class="card card2 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title">Vendor Management</h5>
+                        <i class="bi bi-clipboard-check"></i>
+                    </div>
+                    <p class="card-text">
+                        <span class="fw-bold fs-1">{{ vendor_count }}</span>
+                        Total Vendors
+                    </p>
+                </div>
+            </div>                       
+        </div>
+
+        <!-- Card for Installation/Maintenance -->
+        <div class="col-lg-3 mb-3">
+            <div class="card card3 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title">Installation / Maintenance</h5>
+                        <i class="bi bi-tools"></i>
+                    </div>
+                    <p class="card-text">
+                        <span class="fw-bold fs-1">{{ installation_count }}</span>
+                        Total Installation / Maintenance
+                    </p>
+                </div>
+            </div>                       
+        </div>
+
+        <!-- Card for Electricity Provider -->
+        <div class="col-lg-3 mb-3">
+            <div class="card card4 shadow">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title">Electricity Provider</h5>
+                        <i class="bi bi-lightbulb-fill"></i>
+                    </div>
+                    <p class="card-text">
+                        <span class="fw-bold fs-1">{{ electricity_provider_count }}</span>
+                       Total Electricity Provider
+                    </p>
+                </div>
+            </div>                       
+        </div>
+    </div>
+</main>
+{% endblock %}

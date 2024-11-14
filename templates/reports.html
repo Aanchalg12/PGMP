@@ -1,0 +1,65 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+{%block title %} Reports{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Reports</h1>
+    </div>
+    <form method="get" class="mb-4">
+        <label for="start_date">Start Date:</label>
+        <input type="date" name="start_date" id="start_date" value="{{ start_date }}">
+        
+        <label for="end_date">End Date:</label>
+        <input type="date" name="end_date" id="end_date" value="{{ end_date }}">
+        
+        <label for="status">Status:</label>
+        <select name="status" id="status">
+            <option value="">All</option>
+            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+            <option value="incomplete" {% if status_filter == 'incomplete' %}selected{% endif %}>Incomplete</option>
+        </select>
+        
+        <button type="submit">Filter</button>
+    </form>
+
+    <!-- Report Summary -->
+    <h4>Total Installations: {{ total_installations }}</h4>
+    <h4>Pending Installations: {{ pending_installations }}</h4>
+    <h4>Completed Installations: {{ completed_installations }}</h4>
+
+    <!-- Installations Count by Status -->
+    <h4>Installations by Status</h4>
+    <ul>
+        {% for item in installations_count_by_status %}
+            <li>{{ item.status }}: {{ item.count }}</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Installation List -->
+    <h4>Installations</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Installation Address</th>
+                <th>Status</th>
+                <th>Date Installed</th> <!-- Show installation_date instead of created_at -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for installation in installations %}
+                <tr>
+                    <td>{{ installation.customer_profile.user.username }}</td>
+                    <td>{{ installation.customer_profile.address }}</td>
+                    <td>{{ installation.status }}</td>
+                    <td>{{ installation.installation_date }}</td> <!-- Display installation_date -->
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+{% endblock %}

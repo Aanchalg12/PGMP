@@ -1,0 +1,22 @@
+{% extends 'base1.html' %}
+
+{% block title %} Service Details {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Installation Service Details</h1>
+    </div>
+
+    <div>
+        <h3>Service Name: {{ service.service_name }}</h3>
+        <p><strong>Description:</strong> {{ service.description }}</p>
+        <p><strong>Panel Size Range:</strong> {{ service.panel_size_range_min }} kW - {{ service.panel_size_range_max }} kW</p>
+        <p><strong>Price:</strong> £{{ service.price }}</p>
+        <p><strong>Installer Address:</strong> {{ service.installer_address }}</p>
+        <p><strong>Installer Name:</strong> {{ service.installer.user.username }}</p>
+    </div>
+
+    <a href="{% url 'installer_dashboard' %}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+</main>
+{% endblock %}

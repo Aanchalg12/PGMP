@@ -1,0 +1,63 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %}Update Order Status{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Update Order Status</h1>
+    </div>
+
+    <div id="message"></div> <!-- Success or error message container -->
+
+    <form id="update-status-form" method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="status">Select New Status:</label>
+            <select name="status" id="status" class="form-control">
+                <option value="pending" {% if order.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Update Status</button>
+        </div>
+    </form>
+
+</main>
+
+<script>
+    document.getElementById('update-status-form').onsubmit = function(event) {
+        event.preventDefault();  // Prevent the default form submission
+    
+        var formData = new FormData(this);  // Collect the form data
+    
+        // Send the form data via AJAX to the server
+        fetch("{% url 'update_order_status' order.id %}", {
+            method: 'POST',  // Ensure the request method is POST
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',  // Indicate that this is an AJAX request
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                // If the status update was successful, show success message
+                document.getElementById('message').innerHTML = "<div class='alert alert-success'>" + data.message + "</div>";
+            } else if (data.error) {
+                // If there was an error, show the error message
+                document.getElementById('message').innerHTML = "<div class='alert alert-danger'>" + data.error + "</div>";
+            }
+        })
+        .catch(error => {
+            // Handle any errors that occur during the fetch request
+            document.getElementById('message').innerHTML = "<div class='alert alert-danger'>There was an error updating the status. Please try again later.</div>";
+            console.error("Error during the request:", error);  // Log the error in the console for debugging
+        });
+    }
+</script>
+
+{% endblock %}

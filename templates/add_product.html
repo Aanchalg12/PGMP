@@ -1,0 +1,110 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+{% block title %} Add Product {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Add Product</h1>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="form-group mb-3">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">Product Name</label>
+                    <input type="text" name="name" id="{{ form.name.id_for_label }}" class="form-control" value="{{ form.name.value }}">
+                    {% if form.name.errors %}
+                        <div class="text-danger">
+                            {% for error in form.name.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.brand.id_for_label }}" class="form-label">Brand</label>
+                    <input type="text" name="brand" id="{{ form.brand.id_for_label }}" class="form-control" value="{{ form.brand.value }}">
+                    {% if form.brand.errors %}
+                        <div class="text-danger">
+                            {% for error in form.brand.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                    <textarea name="description" id="{{ form.description.id_for_label }}" class="form-control">{{ form.description.value }}</textarea>
+                    {% if form.description.errors %}
+                        <div class="text-danger">
+                            {% for error in form.description.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.price.id_for_label }}" class="form-label">Price</label>
+                    <input type="number" name="price" id="{{ form.price.id_for_label }}" class="form-control" value="{{ form.price.value }}">
+                    {% if form.price.errors %}
+                        <div class="text-danger">
+                            {% for error in form.price.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.stock_quantity.id_for_label }}" class="form-label">Stock Quantity</label>
+                    <input type="number" name="stock_quantity" id="{{ form.stock_quantity.id_for_label }}" class="form-control" value="{{ form.stock_quantity.value }}">
+                    {% if form.stock_quantity.errors %}
+                        <div class="text-danger">
+                            {% for error in form.stock_quantity.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.image.id_for_label }}" class="form-label">Product Image</label>
+                    <input type="file" name="image" id="{{ form.image.id_for_label }}" class="form-control">
+                    {% if form.image.errors %}
+                        <div class="text-danger">
+                            {% for error in form.image.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Panel Size Field -->
+                <div class="form-group mb-3">
+                    <label for="{{ form.panel_size.id_for_label }}" class="form-label">Panel Size</label>
+                    <input type="text" name="panel_size" id="{{ form.panel_size.id_for_label }}" class="form-control" value="{{ form.panel_size.value }}">
+                    {% if form.panel_size.errors %}
+                        <div class="text-danger">
+                            {% for error in form.panel_size.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Add Product</button>
+            <a href="{% url 'vendor_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</main>
+{% endblock %}

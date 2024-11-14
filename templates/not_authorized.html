@@ -1,0 +1,14 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+{%block title %} Not Authorised {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+   
+    <h1>Access Denied</h1>
+    <p>You do not have permission to access this page.</p>
+    <a href="{% url 'home' %}">Return to Home</a>
+
+</main>
+{% endblock %}

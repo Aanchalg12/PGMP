@@ -1,0 +1,48 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+
+{% block title %} Search {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Search Results for "{{ query }}"</h2>
+    </div>
+
+    {% if results %}
+        <ul>
+            {% for result in results %}
+                {% if search_type == 'product' %}
+                    <li>
+                        <strong>{{ result.name }}</strong>
+                        <p>{{ result.description }}</p>
+                    </li>
+
+                {% elif search_type == 'installer' %}
+                    <li>
+                        <strong>{{ result.user.username }}</strong>
+                        <p>Location: {{ result.address|default:"No address provided" }}</p>
+                    </li>
+
+                {% elif search_type == 'install_request' %}
+                    <li>
+                        <strong>{{ result.customer_profile.user.username }}</strong>
+                        <p>Address: {{ result.customer_profile.address|default:"No address provided" }}</p>
+                        <p>Status: {{ result.status }}</p>
+                    </li>
+
+                {% elif search_type == 'user' %}
+                    <li>
+                        <strong>{{ result.user.username }}</strong>
+                        <p>Role: {{ result.user_role }}</p>
+                        <p>Email: {{ result.user.email }}</p>  <!-- Corrected access to email -->
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No results found for "{{ query }}" in the selected category.</p>
+    {% endif %}
+</main>
+{% endblock %}

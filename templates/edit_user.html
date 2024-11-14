@@ -1,0 +1,28 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+{%block title %} Edit User{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 ">
+    <div class="container mt-8">
+        <h2>Edit User Details</h2>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                {{ user_form.as_p }}
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{% url 'user_detail' user.id %}" class="btn btn-secondary">Cancel</a>
+        </form>
+</div>
+
+</main>
+{% endblock %}

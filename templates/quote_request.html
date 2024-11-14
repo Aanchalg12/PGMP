@@ -1,0 +1,22 @@
+{% extends 'base1.html' %}
+
+{% block title %}Quote Request Sent{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Quote Request Sent</h1>
+    </div>
+    <div>
+        <p>Your quote request has been sent to the following installers:</p>
+
+        <ul>
+            {% for service in installer_services %}
+                <li>{{ service.installer.user.username }} - {{ service.service_name }}</li>
+            {% endfor %}
+        </ul>
+
+        <a href="{% url 'installation_services' %}" class="btn btn-primary">Back to Services</a>
+    </div>
+</main>
+{% endblock %}

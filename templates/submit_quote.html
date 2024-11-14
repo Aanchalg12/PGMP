@@ -1,0 +1,25 @@
+{% extends 'base1.html' %}
+
+{% block title %}Submit Quote{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Submit a Quote</h2>
+    </div>
+
+    <section class="quote-request">
+        {% if quote_request %}
+            <h4>Quote Request for {{ quote_request.customer_profile.user.username }}</h4>
+            <p><strong>Estimation Details:</strong> {{ quote_request.estimation_details }}</p>
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Submit Quote</button>
+            <a href="{% url 'vendor_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </section>
+</main>
+{% endblock %}

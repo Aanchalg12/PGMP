@@ -1,0 +1,106 @@
+{% load static %}
+<div class="sidebar">
+    <nav class="nav flex-column">
+        <!-- Dashboard link varies based on user role -->
+        {% if request.user.profile.user_role == 'admin' %}
+            <a class="nav-link" href="{% url 'admin_dashboard' %}">
+                <span class="icon"><i class="bi bi-grid"></i></span>
+                <span class="description">Dashboard</span>
+            </a>
+        {% elif request.user.profile.user_role == 'vendor' %}
+            <a class="nav-link" href="{% url 'vendor_dashboard' %}">
+                <span class="icon"><i class="bi bi-grid"></i></span>
+                <span class="description">Dashboard</span>
+            </a>
+        {% elif request.user.profile.user_role == 'installer' %}
+            <a class="nav-link" href="{% url 'installer_dashboard' %}">
+                <span class="icon"><i class="bi bi-grid"></i></span>
+                <span class="description">Dashboard</span>
+            </a>
+        {% elif request.user.profile.user_role == 'electricity_provider' %}
+            <a class="nav-link" href="{% url 'provider_dashboard' %}">
+                <span class="icon"><i class="bi bi-grid"></i></span>
+                <span class="description">Dashboard</span>
+            </a>
+        {% elif request.user.profile.user_role == 'customer' %}
+            <a class="nav-link" href="{% url 'customer_dashboard' %}">
+                <span class="icon"><i class="bi bi-grid"></i></span>
+                <span class="description">Dashboard</span>
+            </a>
+            <a class="nav-link" href="{% url 'my_orders' %}">
+                <span class="icon"><i class="bi bi-box-seam"></i></span>
+                <span class="description">My Orders</span>
+            </a>
+            <a class="nav-link" href="{% url 'customer_quotes' %}">
+                <span class="icon"><i class="bi bi-file-earmark-text"></i></span>
+                <span class="description">My Quotes</span>
+            </a>
+        {% endif %}
+
+        <!-- Additional links based on roles -->
+        {% if request.user.profile.user_role == 'admin' %}
+            <a class="nav-link" href="{% url 'user_management' %}">
+                <span class="icon"><i class="bi bi-people"></i></span>
+                <span class="description">User Management</span>
+            </a>
+            <a class="nav-link" href="{% url 'reports' %}">
+                <span class="icon"><i class="bi bi-clipboard-check"></i></span>
+                <span class="description">Reports</span>
+            </a>
+            <a class="nav-link" href="{% url 'install_requests' %}">
+                <span class="icon"><i class="bi bi-tools"></i></span>
+                <span class="description">Install Requests</span>
+            </a>
+            <a class="nav-link" href="{% url 'orders' %}">
+                <span class="icon"><i class="bi bi-box-seam"></i></span>
+                <span class="description">Orders</span>
+            </a>
+            <a class="nav-link" href="{% url 'add_product' %}">
+                <span class="icon"><i class="bi bi-plus-circle"></i></span>
+                <span class="description">Add Product</span>
+            </a>
+        {% elif request.user.profile.user_role == 'installer' %}
+            <a class="nav-link" href="{% url 'install_requests' %}">
+                <span class="icon"><i class="bi bi-tools"></i></span>
+                <span class="description">Install Requests</span>
+            </a>
+        {% elif request.user.profile.user_role == 'electricity_provider' %}
+            <a class="nav-link" href="{% url 'transactions' %}">
+                <span class="icon"><i class="bi bi-wallet"></i></span>
+                <span class="description">Transactions</span>
+            </a>
+        {% elif request.user.profile.user_role == 'vendor' %}
+            <a class="nav-link" href="{% url 'orders' %}">
+                <span class="icon"><i class="bi bi-box-seam"></i></span>
+                <span class="description">Orders</span>
+            </a>
+        {% elif request.user.profile.user_role == 'customer' %}
+            <a class="nav-link" href="{% url 'estimate_solar_size' %}">
+                <span class="icon"><i class="bi bi-calculator"></i></span>
+                <span class="description">Estimator</span>
+            </a>
+            <a class="nav-link" href="{% url 'product_vendors' %}">
+                <span class="icon"><i class="bi bi-shop"></i></span>
+                <span class="description">Products & Vendors</span>
+            </a>
+            <a class="nav-link" href="{% url 'installation_services' %}">
+                <span class="icon"><i class="bi bi-hammer"></i></span>
+                <span class="description">Installation Services</span>
+            </a>
+            <a class="nav-link" href="{% url 'shopping_cart' %}">
+                <span class="icon"><i class="bi bi-cart"></i></span>
+                <span class="description">Shopping Cart</span>
+            </a>
+        {% endif %}
+
+        <!-- Common links for all roles -->
+        <a class="nav-link" href="{% url 'profile' %}">
+            <span class="icon"><i class="bi bi-person-square"></i></span>
+            <span class="description">Profile</span>
+        </a>
+        <a class="nav-link" href="{% url 'settings' %}">
+            <span class="icon"><i class="bi bi-gear"></i></span>
+            <span class="description">Settings</span>
+        </a>
+    </nav>
+</div>

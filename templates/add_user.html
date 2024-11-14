@@ -1,0 +1,109 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %} Add User {% endblock %}
+{% block content %}
+<main class="main-content min-vh-100">
+    <div class="container mt-8">
+        <h2>Add New User</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                {{ form.username.label }}
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.username.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.email.label }}
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.email.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.address.label }}
+                {{ form.address }}
+                {% if form.address.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.address.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.mobile.label }}
+                {{ form.mobile }}
+                {% if form.mobile.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.mobile.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.password.label }}
+                {{ form.password }}
+                {% if form.password.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.password.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.user_role.label }}
+                {{ form.user_role }}
+                {% if form.user_role.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.user_role.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                {{ form.company_name.label }}
+                {{ form.company_name }}
+                {% if form.company_name.errors %}
+                    <div class="invalid-feedback">
+                        {% for error in form.company_name.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="{% url 'user_management' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+
+        <br>
+        <a href="{% url 'user_management' %}">Back to User Management</a>
+    </div>
+</main>
+{% endblock %}

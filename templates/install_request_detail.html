@@ -1,0 +1,51 @@
+<!-- install_request_detail.html -->
+{% extends 'base1.html' %}
+
+{% block title %}Installation Request Details{% endblock %}
+
+{% block content %}
+
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Installation Request Details</h2>
+        
+    </div>
+    <div>
+        <table class="table">
+            <tr>
+                <th>Customer Name</th>
+                <td>
+                    {% if installation_booking.customer_profile %}
+                        {{ installation_booking.customer_profile.user.username }}
+                    {% else %}
+                        Unknown Customer
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Installation Address</th>
+                <td>
+                    {% if installation_booking.customer_profile %}
+                        {{ installation_booking.customer_profile.address }}
+                    {% else %}
+                        Not Provided
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <th>Solar Panel Size</th>
+                <td>{{ installation_booking.solar_panel_size }} kW</td>
+            </tr>
+            <tr>
+                <th>Booking Date</th>
+                <td>{{ installation_booking.installation_date|date:"D, d M Y H:i" }}</td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td>{{ installation_booking.status }}</td>
+            </tr>
+        </table>
+        
+    </div>
+</main>
+{% endblock %}

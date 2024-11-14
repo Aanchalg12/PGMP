@@ -1,0 +1,42 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %}View Estimation{% endblock %}
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Your Solar Estimations</h2>
+       
+    </div>
+   
+    <table>
+        <thead>
+            <tr>
+                <th>Postcode</th>
+                <th>Longitude</th>
+                <th>Latitude</th>
+                <th>Electricity Bill (£)</th>
+                <th>House Type</th>
+                <th>Solar Irradiance (kWh/m²)</th>
+                <th>Estimated Size (kW)</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for estimation in estimations %}
+            <tr>
+                <td>{{ estimation.postcode }}</td>
+                <td>{{ estimation.longitude }}</td>
+                <td>{{ estimation.latitude }}</td>
+                <td>£{{ estimation.electricity_bill }}</td>
+                <td>{{ estimation.house_type }}</td>
+                <td>{{ estimation.solar_irradiance }}</td>
+                <td>{{ estimation.estimated_size_kw }}</td>
+                <td>{{ estimation.created_at }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="8">No estimations found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</main>
+{% endblock %}

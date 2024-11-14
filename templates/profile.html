@@ -1,0 +1,41 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">User Profile</h2>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="id_username">Username:</label>
+                {{ user_form.username }}
+            </div>
+            <div class="form-group">
+                <label for="id_address">Address:</label>
+                {{ profile_form.address }}
+            </div>
+            <div class="form-group">
+                <label for="id_mobile">Mobile:</label>
+                {{ profile_form.mobile }}
+            </div>
+            <div class="form-group">
+                <label for="id_company_name">Company Name:</label>
+                {{ profile_form.company_name }}
+            </div>
+            <div class="form-group">
+                <label for="id_user_role">User Role:</label>
+                {{ profile_form.user_role }}
+            </div>
+            <div class="form-group">
+                <label for="id_profile_picture">Profile Picture:</label>
+                <input type="file" name="profile_picture" class="form-control" id="id_profile_picture">
+                {% if profile_form.instance.profile_picture %}
+                    <img src="{{ profile_form.instance.profile_picture.url }}" alt="Profile Picture" style="width: 100px; height: auto;">
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">Update Profile</button>
+    </form>
+</main>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends 'base1.html' %}
+
+{% block title %}Products & Vendors{% endblock %}
+
+{% load static %}  <!-- Make sure to load static files here -->
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Products & Vendors</h2>
+    </div>
+
+    <div class="product-list">
+        {% if products %}
+            <div class="row">
+                {% for product in products %}
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">  <!-- h-100 ensures equal height cards -->
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
+                            {% else %}
+                                <img src="{% static 'default-product-image.jpg' %}" class="card-img-top" alt="Product Image">
+                            {% endif %}
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p><strong>Vendor:</strong> {{ product.vendor_profile.company_name }}</p>
+                                <p><strong>Brand:</strong> {{ product.brand }}</p>
+                                <p><strong>Price:</strong> £{{ product.price }}</p>
+                                <p><strong>Description:</strong> {{ product.description }}</p>
+
+                                <!-- Display Vendor's email and address -->
+                               
+                                <p><strong>Vendor Address:</strong> {{ product.vendor_profile.address }}</p>
+
+                                <!-- Add to Cart link -->
+                                <div class="mt-auto">
+                                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary w-100">Add to Cart</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p>No products available at the moment.</p>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

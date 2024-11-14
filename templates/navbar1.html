@@ -1,0 +1,53 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg bg-dark navbar-dark fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'home' %}">Green Solar Panel</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+            <div class="d-flex mx-auto my-2 my-lg-0" style="width: 50%; max-width: 500px;">
+                <form class="d-flex w-100" method="get" action="{% url 'search_results' %}">
+                    <input class="form-control me-2" type="search" name="query" placeholder="Search" aria-label="Search" required>
+                    
+                    <!-- Search options based on user role -->
+                    {% if request.user.profile.user_role == 'customer' %}
+                        <select name="search_type" class="form-select">
+                            <option value="installer">Search Installers</option>
+                            <option value="product">Search Products</option>
+                        </select>
+                    {% elif request.user.profile.user_role == 'vendor' %}
+                        <select name="search_type" class="form-select">
+                            <option value="product">Search Products</option>
+                        </select>
+                    {% elif request.user.profile.user_role == 'installer' %}
+                        <select name="search_type" class="form-select">
+                            <option value="install_request">Search Installation Requests</option>
+                        </select>
+                    {% elif request.user.profile.user_role == 'admin' %}
+                        <select name="search_type" class="form-select">
+                            <option value="user">Search Users</option>
+                            <option value="install_request">Search Install Requests</option>
+                        </select>
+                    {% endif %}
+
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+            </div>
+
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle d-flex align-items-center" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{{ request.user.profile.profile_picture.url }}" class="avatar img-fluid rounded-circle" alt="Profile" style="width: 40px; height: 40px; margin-right: 5px;">
+                        <span class="d-none d-lg-inline">{{ request.user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="{% url 'settings' %}">Settings</a></li>
+                        <li><a class="dropdown-item" href="{% url 'logout' %}">Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

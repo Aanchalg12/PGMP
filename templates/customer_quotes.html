@@ -1,0 +1,111 @@
+{% extends 'base1.html' %}
+
+{% block title %}Received Quotes{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Received Quotes</h2>
+    </div>
+    
+    {% if messages %}
+    <div class="alert alert-info">
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Display vendor quotes -->
+    <h3>Vendor Quotes</h3>
+    {% if vendor_quotes %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Vendor</th>
+                    <th>Quote Amount</th>
+                   
+                    <th>Details</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quote in vendor_quotes %}
+                <tr>
+                    <td>{{ quote.vendor.user.username }}</td>
+                    <td>£{{ quote.price_estimate }}</td>
+                    <td>{{ quote.notes }}</td>
+                    <td>{{ quote.status|capfirst }}</td>
+                    <td>
+                        {% if quote.status == 'expired' %}
+                            <p>This quote has expired and cannot be accepted or declined.</p>
+                        {% else %}
+                            <a href="{% url 'accept_quote' quote.id %}" class="btn btn-success">Accept</a>
+                            <a href="{% url 'decline_quote' quote.id %}" class="btn btn-danger">Decline</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">No vendor quotes available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p>You have not received any vendor quotes yet.</p>
+    {% endif %}
+
+    <!-- Display installer quotes -->
+    <h3>Installer Quotes</h3>
+    {% if installer_quotes %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Installer</th>
+                    <th>Quote Amount</th>
+                    <th>Deadline</th>
+                    <th>Details</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quote in installer_quotes %}
+                <tr>
+                    <td>{{ quote.installer.user.username }}</td>
+                    <td>£{{ quote.price_estimate }}</td>
+                    <td>{{ quote.quote_request.quote_deadline }}</td>
+                    <td>{{ quote.notes }}</td>
+                    <td>{{ quote.status|capfirst }}</td>
+                    <td>
+                        {% if quote.status == 'pending' %}
+                            <a href="{% url 'accept_installation' quote.id %}" class="btn btn-success">Accept</a>
+                            <a href="{% url 'decline_installation' quote.id %}" class="btn btn-danger">Decline</a>
+                        {% elif quote.status == 'accepted' %}
+                            <span>Accepted</span>
+                            {% if quote.installerinstallationbooking_set.exists %}
+                                <span>Installer Booked for {{ quote.installerinstallationbooking_set.first.installation_date }}</span>
+                            {% endif %}
+                        {% elif quote.status == 'declined' %}
+                            <span>Declined</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">No installer quotes available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p>You have not received any installer quotes yet.</p>
+    {% endif %}
+</main>
+{% endblock %}

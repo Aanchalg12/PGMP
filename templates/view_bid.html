@@ -1,0 +1,33 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+{%block title %} View Bid{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">View Bid</h2>
+    </div>
+    <div class="container mt-5">
+        <h2>Bid Details</h2>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Bid for {{ bid.customer_profile.user.get_full_name }}</h5>
+                <p><strong>Provider:</strong> {{ bid.provider_profile.user.get_full_name }}</p>
+                <p><strong>Bid Amount (Rate per kWh):</strong> ${{ bid.bid_amount }}</p>
+                <p><strong>Expiration Date:</strong> {{ bid.expiration_date }}</p>
+                <p><strong>Status:</strong> {{ bid.get_status_display }}</p>
+                <p><strong>Created At:</strong> {{ bid.created_at }}</p>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            
+            <a href="{% url 'bid_withdraw' bid.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to withdraw this bid?');">Withdraw Bid</a>
+            <a href="{% url 'provider_dashboard' %}" class="btn btn-secondary">Back to Active Bids</a>
+        </div>
+    </div>
+
+
+</main>
+{% endblock%}

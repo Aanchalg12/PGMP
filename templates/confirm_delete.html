@@ -1,0 +1,24 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+{%block title %} Delete Product {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Delete Product</h1>
+    </div>
+
+    <div class="container mt-4">
+        <h2>Confirm Deletion</h2>
+        <p>Are you sure you want to delete the product "{{ product.name }}"?</p>
+        <form method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, delete</button>
+            <a href="{% url 'vendor_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+
+
+</main>
+{% endblock %}

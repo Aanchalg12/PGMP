@@ -1,0 +1,25 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+{% block title %} User Details{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100">
+    <div class="container mt-5">
+        <h2>User Details</h2>
+        <br>
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ profile.user.get_full_name|default:profile.user.username }}</h5>
+                <p class="card-text"><strong>Email:</strong> {{ profile.user.email }}</p>
+                <p class="card-text"><strong>Username:</strong> {{ profile.user.username }}</p>
+                <p class="card-text"><strong>Address:</strong> {{ profile.address|default:"Not provided" }}</p>
+                <p class="card-text"><strong>Mobile:</strong> {{ profile.mobile|default:"Not provided" }}</p>
+                <p class="card-text"><strong>User Role:</strong> {{ profile.user_role|default:"Not provided" }}</p>
+                <p class="card-text"><strong>Company Name:</strong> {{ profile.company_name|default:"Not provided" }}</p>
+            </div>
+        </div>
+        <a href="{% url 'user_management' %}" class="btn btn-secondary mt-3">Back to User Management</a>
+    </div>
+</main>
+{% endblock %}

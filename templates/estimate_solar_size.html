@@ -1,0 +1,42 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %}Estimator{% endblock %}
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">Solar Panel Estimator</h2>
+    </div>
+    <form method="POST" id="solar-estimation-form">
+        {% csrf_token %}
+
+        <!-- Postcode -->
+        <div class="mb-3">
+            <label for="postcode" class="form-label">Postcode:</label>
+            <input type="text" class="form-control" id="postcode" name="postcode" required>
+        </div>
+
+        <!-- Monthly Electricity Bill -->
+        <div class="mb-3">
+            <label for="electricity_bill" class="form-label">Monthly Electricity Bill (£):</label>
+            <input type="number" class="form-control" id="electricity_bill" name="electricity_bill" required>
+        </div>
+
+        <!-- House Type -->
+        <div class="mb-3">
+            <label for="house_type" class="form-label">House Type:</label>
+            <select class="form-select" id="house_type" name="house_type" required>
+                <option value="detached">Detached</option>
+                <option value="semi-detached">Semi-Detached</option>
+                <option value="flat">Flat</option>
+            </select>
+        </div>
+
+        <!-- Estimate Button -->
+        <div class="d-flex justify-content-center">
+            <button type="submit" class="btn btn-primary w-50">Estimate</button>
+        </div>
+    </form>
+    
+    
+</main>
+{% endblock %}

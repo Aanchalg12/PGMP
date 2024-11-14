@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{%block title %} About Us{% endblock %}
+
+{% block content %}
+
+<section class="p-5 mt-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4">
+                <img src="{% static "img/solar.jpg" %}" alt="About Us" class="img-fluid">
+            </div>
+            <div class="col-lg-6">
+                
+                <h4>About Our Solar Panel Estimator</h4>
+
+                <p>    Welcome to our Solar Panel Estimator, a powerful tool designed to help you make informed decisions about adopting solar energy for your home or business. We understand that transitioning to renewable energy can seem complex, so we’ve simplified the process. Our web app allows you to estimate the optimal size of your solar panel system, calculate potential savings, and determine how long it will take to recover your investment.
+                    Whether you're looking to reduce energy costs, decrease your carbon footprint, or contribute to a sustainable future, our tool provides accurate and easy-to-understand insights tailored to your energy needs. By combining cutting-edge technology with environmental consciousness, we aim to empower individuals and businesses to embrace clean energy with confidence.
+                    
+                </p>
+                <br/>
+
+                <h4>    Why Choose Us? </h4>
+                <p>    Simple and user-friendly interface
+                    Accurate, data-driven estimates
+                    Tailored results based on your location and energy consumption
+                    Information on government incentives to maximize savings
+                    Start your solar journey today and take control of your energy future!</p>
+                <p>We are a company committed to providing sustainable energy solutions. Our mission is to make solar energy accessible and affordable to everyone. With years of experience, we specialize in delivering customized solar panel solutions that meet our clients' unique energy needs.</p>
+                <p>Our team of experts ensures seamless installation and maintenance, along with offering the best buyback rates for excess energy generated. Join us in the journey towards a greener planet!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

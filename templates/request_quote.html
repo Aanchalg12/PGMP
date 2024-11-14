@@ -1,0 +1,12 @@
+<!-- request_quote.html -->
+{% extends 'base1.html' %}
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <h3>Request a Quote</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}  <!-- Render form fields -->
+        <button type="submit" class="btn btn-primary">Submit Quote Request</button>
+    </form>
+</main>
+{% endblock %}

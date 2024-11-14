@@ -1,0 +1,26 @@
+{% extends 'base1.html' %}
+
+{% block title %}Accept or Decline Quote{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <h2 class="h2">Quote from {{ quote.installer_profile.user.username }}</h2>
+
+    {% for quote in quotes %}
+    <div class="quote">
+        <p>Quote ID: {{ quote.id }}</p>
+        <p>Status: {{ quote.status }}</p>
+
+        <!-- Show accept/decline buttons only for pending quotes -->
+        {% if quote.status == 'pending' %}
+            <a href="{% url 'accept_installer_quote' quote.id %}" class="btn btn-primary">Accept</a>
+            <a href="{% url 'decline_installer_quote' quote.id %}" class="btn btn-danger">Decline</a>
+        {% else %}
+            <p>This quote is already processed.</p>
+        {% endif %}
+    </div>
+{% endfor %}
+
+
+</main>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %}Installation Details{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Installation Dashboard</h1>
+    </div>
+    <div class="container mt-5">
+        <h2>Installation Details</h2>
+        <div class="card mt-3">
+            <div class="card-body">
+                <h5 class="card-title">Installation for {{ installation.customer_profile.user.username }}</h5>
+                <p><strong>Installation Address:</strong> {{ installation.address }}</p>
+                <p><strong>Solar Panel Size:</strong> {{ installation.solar_panel_size }}</p>
+                <p><strong>Status:</strong> {{ installation.get_status_display }}</p>
+                <p><strong>Scheduled Date:</strong> {{ installation.scheduled_date|date:"Y-m-d" }}</p>
+                <!-- Add other fields as needed -->
+            </div>
+        </div>
+        <a href="{% url 'installation_dashboard' %}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+    </div>
+</main>
+{% endblock %}

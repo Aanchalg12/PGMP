@@ -1,0 +1,87 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+{% block title %} Edit Product {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Edit Product</h1>
+    </div>
+
+    <!-- Success or error message block -->
+    {% if messages %}
+        <div class="alert alert-info">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+                
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Product Name Field -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="name">Product Name</label>
+                {{ form.name }}
+            </div>
+        </div>
+    </br>
+        <!-- Price Field -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="price">Price (£)</label>
+                {{ form.price }}
+            </div>
+        </div>
+    </br>
+        <!-- Stock Quantity Field -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="stock_quantity">Stock Quantity</label>
+                {{ form.stock_quantity }}
+            </div>
+        </div>
+    </br>
+        <!-- Brand Field -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="brand">Brand</label>
+                {{ form.brand }}
+            </div>
+        </div>
+    </br>
+        <!-- Description Field -->
+        <div class="col-md-6s">
+            <div class="form-group">
+                <label for="description">Description</label>
+                {{ form.description }}
+            </div>
+        </div>
+    </br>
+        <!-- Panel Size Field -->
+        <div class="col-md-6">
+            <div class="form-group">
+                <label for="panel_size">Panel Size</label>
+                {{ form.panel_size }}
+            </div>
+        </div>
+    </br>
+        <!-- Product Image Field -->
+        <div class="form-group">
+            <label for="image">Product Image</label>
+            {{ form.image }}
+        </div>
+    </br>
+        <!-- Submit and Cancel Buttons -->
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <a href="{% url 'vendor_dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+
+</main>
+{% endblock %}
