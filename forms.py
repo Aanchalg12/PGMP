@@ -3,9 +3,9 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 from .validators import validate_uk_postcode
-from .models import Profile, Product, CartItem, QuoteRequest, QuoteSubmission, InstallerService, QuoteRequestInstaller, Quote, QuoteSubmissionInstaller
+from .models import Profile, Product, CartItem, QuoteRequest, QuoteSubmission, InstallerService, QuoteRequestInstaller, Quote, QuoteSubmissionInstaller, Review, InstallerReview
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.utils.timezone import now
 
 
 class SignupForm(UserCreationForm):
@@ -17,6 +17,20 @@ class SignupForm(UserCreationForm):
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2']
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+
+        # Check if the username is only numbers
+        if username.isdigit():
+            raise ValidationError("Username cannot consist of numbers only.")
+
+        # Check for other invalid conditions if necessary (e.g., special characters)
+        # Example: Ensure only alphanumeric characters (modify if needed)
+        if not username.isalnum():
+            raise ValidationError("Username can only contain letters and numbers.")
+
+        return username
 
 class LoginForm(AuthenticationForm):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
@@ -33,7 +47,6 @@ class UserRegistrationForm(forms.ModelForm):
         ('installer', 'Installer/Maintenance'),
         ('customer', 'Customer'),
         ('vendor', 'Vendor'),
-        ('electricity_provider', 'Electricity Provider'),
     ], widget=forms.Select(attrs={'class': 'form-control'}))
     company_name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
 
@@ -84,7 +97,6 @@ class UserEditForm(forms.ModelForm):
         ('customer', 'Customer'),
         ('admin', 'Admin'),
         ('vendor', 'Vendor'),
-        ('electricity_provider', 'Electricity Provider'),
     ], widget=forms.Select(attrs={'class': 'form-control'}))
     company_name = forms.CharField(max_length=100, required=False, widget=forms.TextInput(attrs={'class': 'form-control'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}), required=False)
@@ -118,7 +130,7 @@ class UserForm(forms.ModelForm):
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
-        fields = ['address', 'mobile', 'company_name', 'user_role', 'profile_picture']  # Added profile_picture
+        fields = ['address', 'mobile', 'company_name', 'user_role', 'profile_picture', 'postcode']  # Added profile_picture
         widgets = {
             'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'mobile': forms.TextInput(attrs={'class': 'form-control'}),
@@ -140,7 +152,27 @@ class ProfilePhotoChangeForm(forms.ModelForm):
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'brand', 'description', 'price', 'stock_quantity', 'image', 'panel_size']
+        fields = [
+            'name', 'brand', 'description', 'price', 'stock_quantity', 
+            'image', 'panel_size', 'has_battery', 
+            'battery_capacity', 'battery_type', 'battery_cost'
+        ]
+
+    # Optional: Custom field rendering or validation logic
+    def clean(self):
+        cleaned_data = super().clean()
+        has_battery = cleaned_data.get("has_battery")
+        
+        if has_battery:
+            battery_capacity = cleaned_data.get("battery_capacity")
+            battery_type = cleaned_data.get("battery_type")
+            battery_cost = cleaned_data.get("battery_cost")
+            
+            if not all([battery_capacity, battery_type, battery_cost]):
+                raise forms.ValidationError(
+                    "Battery capacity, type, and cost are required when 'Has Battery' is selected."
+                )
+        return cleaned_data
 
 class QuoteRequestForm(forms.ModelForm):
     class Meta:
@@ -190,7 +222,7 @@ class CartItemForm(forms.ModelForm):
 class InstallationServiceForm(forms.ModelForm):
     class Meta:
         model = InstallerService
-        fields = ['service_name', 'description', 'panel_size_range_min', 'panel_size_range_max', 'price', 'installer_address']
+        fields = ['service_name', 'description', 'panel_size', 'price', 'installer_address']
 
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -202,14 +234,10 @@ class InstallationServiceForm(forms.ModelForm):
 class QuoteRequestInstallerForm(forms.ModelForm):
     class Meta:
         model = QuoteRequestInstaller
-        fields = ['panel_size_min', 'panel_size_max', 'quote_deadline']
+        fields = ['panel_size', 'quote_deadline']
 
     def __init__(self, *args, **kwargs):
-        # Optionally handle any context-specific initialization here
         super().__init__(*args, **kwargs)
-
-        # If there are fields like panel size that should have dynamic initial values, you can add them here
-        # Example: Set initial values for 'quote_deadline' to a default date
         self.fields['quote_deadline'].initial = None
 
 class QuoteSubmissionInstallerForm(forms.ModelForm):
@@ -234,15 +262,18 @@ class SearchForm(forms.Form):
 
     def __init__(self, user, *args, **kwargs):
         super(SearchForm, self).__init__(*args, **kwargs)
-        
+
+        # Dynamically assign choices based on user role
         if user.profile.user_role == 'customer':
             self.fields['search_type'].choices = [
                 ('installer', 'Search Installers'),
                 ('product', 'Search Products'),
+                ('battery', 'Search Batteries'),  # Added for customers
             ]
         elif user.profile.user_role == 'vendor':
             self.fields['search_type'].choices = [
                 ('product', 'Search Products'),
+                ('battery', 'Search Batteries'),  # Added for vendors
             ]
         elif user.profile.user_role == 'installer':
             self.fields['search_type'].choices = [
@@ -252,7 +283,43 @@ class SearchForm(forms.Form):
             self.fields['search_type'].choices = [
                 ('user', 'Search Users'),
                 ('install_request', 'Search Install Requests'),
+                ('product', 'Search Products'),
+                ('battery', 'Search Batteries'),  # Added for admins
             ]
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'review_text']
+        widgets = {
+            'rating': forms.Select(choices=[(i, i) for i in range(1, 6)]),  # Rating 1-5
+            'review_text': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Write your review here...'}),
+        }
+
+class BookingForm(forms.Form):
+    desired_date = forms.DateField(
+        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        label="Choose Your Installation Date",
+        required=True
+    )
+
+    def clean_desired_date(self):
+        desired_date = self.cleaned_data['desired_date']
+        today = now().date()
+
+        if desired_date <= today:
+            raise ValidationError("The installation date must be in the future. Please choose a valid date.")
+
+        return desired_date
+
+class InstallerReviewForm(forms.ModelForm):
+    class Meta:
+        model = InstallerReview
+        fields = ['rating', 'review_text']
+        widgets = {
+            'rating': forms.HiddenInput(),  # This is where the rating value will be submitted
+            'review_text': forms.Textarea(attrs={'placeholder': 'Enter your review here...', 'rows': 4}),
+        }
 
 class SolarEstimationForm(forms.Form):
     postcode = forms.CharField(label="Postcode", max_length=10)

@@ -5,7 +5,18 @@
 {% block title %} Installer Dashboard {% endblock %}
 
 {% block content %}
+
 <main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    {% if messages %}
+    <div class="alert alert-dismissible fade show">
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Installation Dashboard</h1>
         <a href="{% url 'add_installation_service' %}" class="btn btn-primary">Add Installation Service</a>
@@ -26,7 +37,7 @@
         <tbody>
             {% for service in installation_services %}
             <tr>
-                <td>{{ service.panel_size_range_min }} - {{ service.panel_size_range_max }} kW</td>
+                <td>{{ service.panel_size }} kW</td>
                 <td>£{{ service.price }}</td>
                 <td>{{ service.installer_address }}</td>
                 <td>{{ service.installer.user.username }}</td>
@@ -85,7 +96,7 @@
     <thead>
         <tr>
             <th>Customer Name</th>
-            <th>Panel Size Range</th>
+            <th>Panel Size</th>
             <th>Quote Deadline</th>
             <th>Actions</th>
         </tr>
@@ -94,7 +105,7 @@
         {% for quote in pending_quotes %}
         <tr>
             <td>{{ quote.quote_request.customer_profile.user.username }}</td>
-            <td>{{ quote.quote_request.panel_size_min }} - {{ quote.quote_request.panel_size_max }} kW</td>
+            <td>{{ quote.quote_request.panel_size }} kW</td>
             <td>{{ quote.quote_request.quote_deadline }}</td>
             <td>
                 <a href="{% url 'respond_to_quote' quote_request_id=quote.quote_request.id %}">Respond</a>
@@ -108,30 +119,6 @@
     </tbody>
 </table>
 
-<h3>Submitted Quotes</h3>
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Customer Name</th>
-            <th>Price Estimate</th>
-            <th>Notes</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for quote in quotes_submitted %}
-        <tr>
-            <td>{{ quote.quote_request.customer_profile.user.username }}</td>
-            <td>£{{ quote.price_estimate }}</td>
-            <td>{{ quote.notes }}</td>
-            <td>{{ quote.status|capfirst }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="4">No quotes submitted yet.</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+
 </main>
 {% endblock %}

@@ -1,0 +1,35 @@
+{% extends 'base1.html' %}
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <h2>Book Service: {{ service.service_name }}</h2>
+    <p>Installer: {{ service.installer.user.username }}</p>
+    <p>Description: {{ service.description }}</p>
+    <p>Base Price: £{{ service.price }} per kW</p>
+    <p>Panel Size: {{ panel_size }} kW</p>
+    <p><strong>Total Installation Price: £{{ final_price }}</strong></p> <!-- Display final price -->
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" action="{% url 'book_service' service.id %}">
+        {% csrf_token %}
+        <div class="form-group">
+            {{ form.desired_date.label_tag }}
+            {{ form.desired_date }}
+            {% if form.desired_date.errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.desired_date.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        <button type="submit" class="btn btn-success">Confirm Booking</button>
+    </form>
+</main>
+{% endblock %}

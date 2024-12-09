@@ -1,0 +1,40 @@
+{% extends "base1.html" %}
+
+{% block title %}Installer Details{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">{{ installer.user.username }}'s Profile</h1>
+    </div>
+        <div>
+            <p>Address: {{ installer.address }}</p>
+            <p>Company: {{ installer.company_name }}</p>
+            <p>Average Rating: 
+                {% if average_rating %}
+                    {{ average_rating|floatformat:1 }}/5
+                {% else %}
+                    No ratings yet
+                {% endif %}
+            </p>
+
+            <h3>Reviews</h3>
+            {% for review in installer.reviews.all %}
+                <div class="review">
+                    <strong>{{ review.user.username }}</strong> rated {{ review.rating }}/5
+                    <p>{{ review.review_text }}</p>
+                    <small>Reviewed on {{ review.created_at|date:"M d, Y" }}</small>
+                </div>
+            {% empty %}
+                <p>No reviews yet. Be the first to review!</p>
+            {% endfor %}
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'submit_installer_review' installer.id %}" class="btn btn-primary">Write a Review</a>
+            {% else %}
+                <p><a href="{% url 'login' %}">Log in</a> to leave a review.</p>
+            {% endif %}
+        <div>
+    <div>
+</main>
+{% endblock %}

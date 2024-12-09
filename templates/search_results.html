@@ -2,7 +2,7 @@
 
 {% load static %}
 
-{% block title %} Search {% endblock %}
+{% block title %} Search Results for "{{ query }}" {% endblock %}
 
 {% block content %}
 <main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
@@ -13,30 +13,40 @@
     {% if results %}
         <ul>
             {% for result in results %}
-                {% if search_type == 'product' %}
+                {% if search_type == 'product' or search_type == 'battery' %}
                     <li>
-                        <strong>{{ result.name }}</strong>
+                        <h4>{{ result.name }}</h4>
+                        <p><strong>Brand:</strong> {{ result.brand|default:"Unknown" }}</p>
                         <p>{{ result.description }}</p>
-                    </li>
+                        <p><strong>Price:</strong> £{{ result.price }}</p>
 
+                        {% if result.has_battery %}
+                            <h5>Battery Details</h5>
+                            <p><strong>Type:</strong> {{ result.battery_type|default:"N/A" }}</p>
+                            <p><strong>Capacity:</strong> {{ result.battery_capacity|default:"N/A" }} kWh</p>
+                            <p><strong>Cost:</strong> £{{ result.battery_cost|default:"N/A" }}</p>
+                        {% endif %}
+                    </li>
                 {% elif search_type == 'installer' %}
                     <li>
                         <strong>{{ result.user.username }}</strong>
                         <p>Location: {{ result.address|default:"No address provided" }}</p>
                     </li>
-
                 {% elif search_type == 'install_request' %}
                     <li>
                         <strong>{{ result.customer_profile.user.username }}</strong>
                         <p>Address: {{ result.customer_profile.address|default:"No address provided" }}</p>
                         <p>Status: {{ result.status }}</p>
+                        <p>Installation Date: {{ result.installation_date|date:"F j, Y, g:i a" }}</p>  <!-- Installation date formatted -->
+                        <p>Total Price: {{ result.total_price|default:"No price available" }}</p>  <!-- Total price -->
+                        <p>Solar Panel Size: {{ result.solar_panel_size }} kW</p>  <!-- Solar panel size -->
+                        <p>Installer: {{ result.installer.user.username }}</p>
                     </li>
-
                 {% elif search_type == 'user' %}
                     <li>
                         <strong>{{ result.user.username }}</strong>
                         <p>Role: {{ result.user_role }}</p>
-                        <p>Email: {{ result.user.email }}</p>  <!-- Corrected access to email -->
+                        <p>Email: {{ result.user.email }}</p>
                     </li>
                 {% endif %}
             {% endfor %}

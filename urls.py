@@ -12,7 +12,6 @@ urlpatterns = [
     path('admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('install_requests/', views.install_requests, name='install_requests'),
     path('install-request/<int:id>/', views.install_request_detail, name='install_request_detail'),
-    path('transactions/', views.transactions, name='transactions'),
     path('orders/', views.orders, name='orders'),
     path('estimator/', views.estimator, name='estimator'),
     path('signup/', views.signup, name='signup'),
@@ -33,10 +32,6 @@ urlpatterns = [
     path('dashboard/customer/', views.customer_dashboard, name='customer_dashboard'),
     path('dashboard/vendor/', views.vendor_dashboard, name='vendor_dashboard'),
     path('dashboard/installer/', views.installation_dashboard, name='installer_dashboard'),
-    path('dashboard/provider/', views.provider_dashboard, name='provider_dashboard'),
-    path('view_bid/<int:bid_id>/', views.view_bid, name='view_bid'),
-    path('edit_bid/<int:bid_id>/', views.edit_bid, name='edit_bid'),
-    path('withdraw_bid/<int:bid_id>/', views.withdraw_bid, name='withdraw_bid'),
     path('dashboard/vendor/add_product/', views.add_product, name='add_product'),
     path('dashboard/vendor/edit_product/<int:product_id>/', views.edit_product, name='edit_product'),
     path('dashboard/vendor/delete_product/<int:product_id>/', views.delete_product, name='delete_product'),
@@ -72,6 +67,8 @@ urlpatterns = [
     path('installation-service/<int:service_id>/view/', views.view_installation_service, name='view_installation_service'),
     path('get-quote/<int:estimation_id>/', views.get_quote, name='get_quote'),
     path('book-service/<int:service_id>/', views.book_service, name='book_service'),
+    path('installer/<int:installer_id>/', views.installer_details, name='installer_details'),
+    path('installer/<int:installer_id>/review/', views.submit_installer_review, name='submit_installer_review'),
     #path('submit-quote1/<int:quote_request_id>/', views.submit_quote1, name='submit_quote1'),
     #path('accept_or_decline_quote/<int:quote_id>/', views.accept_or_decline_quote, name='accept_or_decline_quote'),
     path('respond-to-quote/<int:quote_request_id>/', views.respond_to_quote, name='respond_to_quote'),
@@ -81,7 +78,13 @@ urlpatterns = [
     path('install-request/<int:booking_id>/', views.install_request_detail, name='install_request_detail'),
     path('installation/<int:installation_id>/update_status/<str:status>/', views.update_installation_status, name='update_install_status'),
     path('search/', views.search_results, name='search_results'),
+    path('solar-schemes/', views.solar_schemes, name='solar_schemes'),
+    path('order/<int:order_id>/receipt/', views.generate_pdf_receipt, name='generate_pdf_receipt'),
+    path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+    path('vendor/quotes/', views.vendor_view_quotes, name='vendor_view_quotes'),
+    path('installations/completed/', views.completed_installations, name='completed_installations'),
+    path('installation/<int:installation_id>/detail/', views.installation_detail, name='installation_detail'),
+    
 ]
-
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

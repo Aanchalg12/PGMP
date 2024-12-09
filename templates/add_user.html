@@ -7,34 +7,40 @@
         <h2>Add New User</h2>
 
         {% if messages %}
+        <div class="alert alert-dismissible fade show">
             {% for message in messages %}
-                <div class="alert alert-info">{{ message }}</div>
+                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
             {% endfor %}
-        {% endif %}
+        </div>
+    {% endif %}
 
         <form method="post">
             {% csrf_token %}
             <div class="mb-3">
-                {{ form.username.label }}
+                {{ form.username.label_tag }}
                 {{ form.username }}
                 {% if form.username.errors %}
-                    <div class="invalid-feedback">
+                    <ul class="text-danger">
                         {% for error in form.username.errors %}
-                            <p>{{ error }}</p>
+                            <li>{{ error }}</li>
                         {% endfor %}
-                    </div>
+                    </ul>
                 {% endif %}
             </div>
 
+            
             <div class="mb-3">
                 {{ form.email.label }}
                 {{ form.email }}
                 {% if form.email.errors %}
-                    <div class="invalid-feedback">
-                        {% for error in form.email.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
+                <ul class="text-danger">
+                    {% for error in form.email.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
@@ -42,11 +48,11 @@
                 {{ form.address.label }}
                 {{ form.address }}
                 {% if form.address.errors %}
-                    <div class="invalid-feedback">
-                        {% for error in form.address.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
+                <ul class="text-danger">
+                    {% for error in form.adress.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
@@ -54,11 +60,11 @@
                 {{ form.mobile.label }}
                 {{ form.mobile }}
                 {% if form.mobile.errors %}
-                    <div class="invalid-feedback">
-                        {% for error in form.mobile.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
+                <ul class="text-danger">
+                    {% for error in form.mobile.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
@@ -66,11 +72,11 @@
                 {{ form.password.label }}
                 {{ form.password }}
                 {% if form.password.errors %}
-                    <div class="invalid-feedback">
-                        {% for error in form.password.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
+                <ul class="text-danger">
+                    {% for error in form.password.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
@@ -78,11 +84,11 @@
                 {{ form.user_role.label }}
                 {{ form.user_role }}
                 {% if form.user_role.errors %}
-                    <div class="invalid-feedback">
-                        {% for error in form.user_role.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
+                <ul class="text-danger">
+                    {% for error in form.user_role.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 
@@ -90,11 +96,11 @@
                 {{ form.company_name.label }}
                 {{ form.company_name }}
                 {% if form.company_name.errors %}
-                    <div class="invalid-feedback">
-                        {% for error in form.company_name.errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
+                <ul class="text-danger">
+                    {% for error in form.compay_name.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
                 {% endif %}
             </div>
 

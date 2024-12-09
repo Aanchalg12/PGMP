@@ -8,6 +8,7 @@
 <main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
     </div>
+    
     <!-- search_form.html -->
     <form method="get" action="{% url 'search_results' %}">
         <input type="text" name="query" placeholder="Search..." required>
@@ -16,11 +17,13 @@
             <select name="search_type">
                 <option value="installer">Search Installers</option>
                 <option value="product">Search Products</option>
+                <option value="battery">Search Batteries</option>
             </select>
 
         {% elif request.user.profile.user_role == 'vendor' %}
             <select name="search_type">
                 <option value="product">Search Products</option>
+                <option value="battery">Search Batteries</option>
             </select>
 
         {% elif request.user.profile.user_role == 'installer' %}
@@ -32,8 +35,8 @@
             <select name="search_type">
                 <option value="user">Search Users</option>
                 <option value="install_request">Search Install Requests</option>
+                <option value="battery">Search Batteries</option>
             </select>
-
         {% endif %}
         
         <button type="submit">Search</button>

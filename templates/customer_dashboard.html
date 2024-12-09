@@ -1,5 +1,5 @@
 {% extends 'base1.html' %}
-
+{% load custom_filters %}
 {% load static %}
 
 {% block title %} Customer Dashboard {% endblock %}
@@ -16,12 +16,12 @@
 
     <!-- Last Estimation Result Section -->
     <section class="last-estimation-result">
-        <h3>Last Solar Panel Estimation</h3>
+        <h4>Last Solar Panel Estimation</h4>
         {% if last_estimation %}
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title">Solar Panel Size: {{ last_estimation.estimated_size_kw }} kW</h5>
-                    <p><strong>Location:</strong> {{ last_estimation.latitude }}, {{ last_estimation.longitude }}</p>
+                    <!--<p><strong>Location:</strong> {{ last_estimation.latitude }}, {{ last_estimation.longitude }}</p>-->
                     <p><strong>Solar Irradiance:</strong> {{ last_estimation.solar_irradiance }} kWh/m²/day</p>
                     <p><strong>Estimated Savings:</strong> £{{ last_estimation.annual_savings|floatformat:2 }}</p>
                     <p><strong>Estimated Payback Period:</strong> {{ last_estimation.payback_period|default:"N/A" }} years</p>
@@ -33,9 +33,10 @@
     </section>
 
     </br>
-    <!-- Recommended Solar Products Section -->
+  
+<!-- Recommended Solar Products Section -->
 <section class="recommended-products">
-    <h3>Recommended Solar Products</h3>
+    <h4>Recommended Solar Products</h4>
     {% if recommended_products %}
         <div class="row">
             {% for product in recommended_products %}
@@ -44,9 +45,33 @@
                         <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title">{{ product.name }}</h5>
-                            <p class="card-text">{{ product.description }}</p>
-                            <p class="card-text">Price: £{{ product.price }}</p>
-                            <!-- Add mt-auto to push the button to the bottom -->
+                            <p><strong>Brand:</strong> {{ product.brand }}</p>
+
+                            <!-- Description Toggle -->
+                            <div id="desc-{{ product.id }}">
+                                <p class="card-text">
+                                    <span class="short-desc">{{ product.description|truncatewords:20 }}</span>
+                                    <span class="full-desc" style="display: none;">{{ product.description }}</span>
+                                </p>
+                                <p class="card-text">
+                                    <a href="javascript:void(0);" class="read-more" onclick="toggleDescription({{ product.id }})">Read More</a>
+                                </p>
+                            </div>
+
+                            <p class="card-text">
+                                <strong>Price:</strong> £{{ product.dynamic_price }}
+                            </p>
+
+                            <!-- Battery Information -->
+                            {% if product.has_battery %}
+                                <div class="battery-info mt-2">
+                                    <h6>Battery Details</h6>
+                                    <p><strong>Type:</strong> {{ product.battery_type }}</p>
+                                    <p><strong>Capacity:</strong> {{ product.battery_capacity }} kWh</p>
+                                    <p><strong>Cost:</strong> £{{ product.battery_cost|floatformat:2 }}</p>
+                                </div>
+                            {% endif %}
+                            
                             <div class="mt-auto">
                                 <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary w-100">Add to Cart</a>
                             </div>
@@ -60,11 +85,11 @@
     {% endif %}
 </section>
 
-
+    
     </br>
     <!-- Nearby Installers Section -->
     <section class="nearby-installers">
-        <h3>Nearby Installers</h3>
+        <h4>Nearby Installers</h4>
         {% if nearby_installers %}
             <div class="row">
                 {% for installer in nearby_installers %}
@@ -74,7 +99,32 @@
                                 <h5 class="card-title">{{ installer.user.username }}</h5>
                                 <p class="card-text"><strong>Location:</strong> {{ installer.address }}</p>
                                 <p class="card-text"><strong>Contact:</strong> {{ installer.mobile }}</p>
-                                <a href="mailto:{{ installer.user.email }}" class="btn btn-primary">Contact Installer</a>
+                                <!-- Display Rating and Review Count -->
+                                <p class="card-text">
+                                    {% if installer.review_count > 0 %}
+                                        <strong>Average Rating:</strong> 
+                                        <span class="text-warning">
+                                            &#9733; {{ installer.average_rating|floatformat:1 }} / 5
+                                        </span>
+                                        <small> ({{ installer.review_count }} reviews)</small>
+                                    {% else %}
+                                        <strong>No ratings yet</strong>
+                                    {% endif %}
+                                </p>
+                                {% if installer_services|get_item:installer.id %}
+                                    <h6>Available Services:</h6>
+                                    <ul>
+                                        {% for service in installer_services|get_item:installer.id %}
+                                            <li>
+                                                {{ service.service_name }} - £{{ service.price }}
+                                                <br/>
+                                                <a href="{% url 'book_service' service.id %}" class="btn btn-success btn-sm">Book Now</a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p>No service available</p>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -84,5 +134,26 @@
             <p>No nearby installers found.</p>
         {% endif %}
     </section>
+    
 </main>
+<script>
+    // JavaScript to toggle between short and full description
+    function toggleDescription(productId) {
+        var shortDesc = document.querySelector('#desc-' + productId + ' .short-desc');
+        var fullDesc = document.querySelector('#desc-' + productId + ' .full-desc');
+        var readMoreLink = document.querySelector('#desc-' + productId + ' .read-more');
+
+        if (shortDesc.style.display === "none") {
+            // If the full description is visible, show the short one and update the link text
+            shortDesc.style.display = "inline";
+            fullDesc.style.display = "none";
+            readMoreLink.innerHTML = "Read More";
+        } else {
+            // Otherwise, show the full description and update the link text
+            shortDesc.style.display = "none";
+            fullDesc.style.display = "inline";
+            readMoreLink.innerHTML = "Read Less";
+        }
+    }
+</script>
 {% endblock %}

@@ -1,65 +1,202 @@
 {% extends 'base1.html' %}
 
 {% load static %}
-{%block title %} Reports{% endblock %}
+{% block title %} Reports {% endblock %}
 
 {% block content %}
 <main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <!-- Header Section -->
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
         <h1 class="h2">Reports</h1>
     </div>
-    <form method="get" class="mb-4">
-        <label for="start_date">Start Date:</label>
-        <input type="date" name="start_date" id="start_date" value="{{ start_date }}">
-        
-        <label for="end_date">End Date:</label>
-        <input type="date" name="end_date" id="end_date" value="{{ end_date }}">
-        
-        <label for="status">Status:</label>
-        <select name="status" id="status">
-            <option value="">All</option>
-            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
-            <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
-            <option value="incomplete" {% if status_filter == 'incomplete' %}selected{% endif %}>Incomplete</option>
-        </select>
-        
-        <button type="submit">Filter</button>
+
+    <!-- Filter Section -->
+    <form method="get" class="mb-4 row g-3 align-items-center">
+        <div class="col-md-3">
+            <label for="start_date" class="form-label">Start Date</label>
+            <input type="date" name="start_date" id="start_date" value="{{ start_date }}" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label for="end_date" class="form-label">End Date</label>
+            <input type="date" name="end_date" id="end_date" value="{{ end_date }}" class="form-control">
+        </div>
+        <div class="col-md-3">
+            <label for="status" class="form-label">Status</label>
+            <select name="status" id="status" class="form-select">
+                <option value="">All</option>
+                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                <option value="incomplete" {% if status_filter == 'incomplete' %}selected{% endif %}>Incomplete</option>
+            </select>
+        </div>
+        <div class="col-md-3 align-self-end">
+            <button type="submit" class="btn btn-primary w-100">Filter</button>
+        </div>
     </form>
 
-    <!-- Report Summary -->
-    <h4>Total Installations: {{ total_installations }}</h4>
-    <h4>Pending Installations: {{ pending_installations }}</h4>
-    <h4>Completed Installations: {{ completed_installations }}</h4>
-
-    <!-- Installations Count by Status -->
-    <h4>Installations by Status</h4>
-    <ul>
-        {% for item in installations_count_by_status %}
-            <li>{{ item.status }}: {{ item.count }}</li>
-        {% endfor %}
-    </ul>
-
-    <!-- Installation List -->
-    <h4>Installations</h4>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Customer</th>
-                <th>Installation Address</th>
-                <th>Status</th>
-                <th>Date Installed</th> <!-- Show installation_date instead of created_at -->
-            </tr>
-        </thead>
-        <tbody>
-            {% for installation in installations %}
-                <tr>
-                    <td>{{ installation.customer_profile.user.username }}</td>
-                    <td>{{ installation.customer_profile.address }}</td>
-                    <td>{{ installation.status }}</td>
-                    <td>{{ installation.installation_date }}</td> <!-- Display installation_date -->
-                </tr>
+    <!-- Summary Section -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Installations</h5>
+                    <p class="card-text h4">{{ total_installations }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Installations</h5>
+                    <p class="card-text h4">{{ pending_installations }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-secondary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Incomplete Installations</h5>
+                    <p class="card-text h4">{{ incomplete_installations }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Completed Installations</h5>
+                    <p class="card-text h4">{{ completed_installations }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+   
+    <!-- Installations by Status -->
+    <div class="mb-5">
+        <h4>Installations by Status</h4>
+        <ul class="list-group">
+            {% for item in installations_count_by_status %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ item.status }}
+                    <span class="badge bg-primary rounded-pill">{{ item.count }}</span>
+                </li>
             {% endfor %}
-        </tbody>
-    </table>
+        </ul>
+    </div>
+
+    <!-- Installations List -->
+    <div class="mb-5">
+        <h4>Installations</h4>
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Customer</th>
+                    <th>Installation Address</th>
+                    <th>Status</th>
+                    <th>Date Installed</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for installation in installations %}
+                    <tr>
+                        <td>{{ installation.customer_profile.user.username }}</td>
+                        <td>{{ installation.customer_profile.address }}</td>
+                        <td>{{ installation.status }}</td>
+                        <td>{{ installation.installation_date }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav>
+            <ul class="pagination">
+                {% if paginated_installations.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page_installations={{ paginated_installations.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                {% for page in paginated_installations.paginator.page_range %}
+                    <li class="page-item {% if page == paginated_installations.number %}active{% endif %}"><a class="page-link" href="?page_installations={{ page }}">{{ page }}</a></li>
+                {% endfor %}
+                {% if paginated_installations.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page_installations={{ paginated_installations.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+    <h3>Orders</h3>
+    <!--order summary-->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card text-white bg-primary mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Total Orders</h5>
+                    <p class="card-text h4">{{ total_orders }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-warning mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Orders</h5>
+                    <p class="card-text h4">{{ pending_orders }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-info mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Shipped Orders</h5>
+                    <p class="card-text h4">{{ shipped_orders }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-success mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Delivered Orders</h5>
+                    <p class="card-text h4">{{ delivered_orders }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders Section -->
+    <div class="mb-5">
+        
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Status</th>
+                    <th>Order Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                    <tr>
+                        <td>{{ order.id }}</td>
+                        <td>{{ order.customer_profile.user.username }}</td>
+                        <td>{{ order.product.name }}</td>
+                        <td>{{ order.quantity }}</td>
+                        <td>{{ order.status }}</td>
+                        <td>{{ order.order_date }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav>
+            <ul class="pagination">
+                {% if paginated_orders.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page_orders={{ paginated_orders.previous_page_number }}">Previous</a></li>
+                {% endif %}
+                {% for page in paginated_orders.paginator.page_range %}
+                    <li class="page-item {% if page == paginated_orders.number %}active{% endif %}"><a class="page-link" href="?page_orders={{ page }}">{{ page }}</a></li>
+                {% endfor %}
+                {% if paginated_orders.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page_orders={{ paginated_orders.next_page_number }}">Next</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
 </main>
 {% endblock %}

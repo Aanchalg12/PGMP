@@ -2,6 +2,15 @@
 {% load static %}
 {% block title %}Checkout{% endblock %}
 
+<style>
+    /* Ensure same size for all product images in the checkout page */
+    .product-image {
+        width: 100%;      /* Ensure the image fills the width of the container */
+        height: 200px;    /* Set a fixed height for all images */
+        object-fit: cover; /* Maintain aspect ratio and cover the area without distortion */
+    }
+</style>
+
 {% block content %}
 <main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
     <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
@@ -13,12 +22,12 @@
         {% if cart_items %}
             <div class="row">
                 {% for item in cart_items %}
-                    <div class="col-md-4">
-                        <div class="card">
-                            <img src="{{ item.product.image.url }}" class="card-img-top" alt="{{ item.product.name }}">
+                    <div class="col-md-4 mb-4">
+                        <div class="card h-100">
+                            <img src="{{ item.product.image.url }}" class="card-img-top product-image" alt="{{ item.product.name }}">
                             <div class="card-body">
                                 <h5 class="card-title">{{ item.product.name }}</h5>
-                                <p class="card-text">Price: £{{ item.product.price }}</p>
+                                <p class="card-text">Price: £{{ item.dynamic_price }}</p>
                                 <p class="card-text">Quantity: {{ item.quantity }}</p>
                                 <p class="card-text">Vendor: {{ item.product.vendor_profile.user.username }}</p>
                             </div>
@@ -27,7 +36,7 @@
                 {% endfor %}
             </div>
 
-            <h3 class="mt-3">Total Price: £{{ total_price }}</h3>
+            <h3 class="mt-3">Total Price: £{{ total_cart_price }}</h3>
 
             <form method="post" class="mt-3">
                 {% csrf_token %}

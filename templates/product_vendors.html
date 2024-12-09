@@ -1,8 +1,44 @@
 {% extends 'base1.html' %}
-
 {% block title %}Products & Vendors{% endblock %}
+{% load static %}
 
-{% load static %}  <!-- Make sure to load static files here -->
+<style>
+    .product-image {
+        width: 100%;             /* Image takes full width */
+        height: 200px;           /* Set fixed height */
+        object-fit: contain;     /* Preserve aspect ratio and avoid cropping */
+    }
+
+    /* Styling for the star ratings */
+    .rating-stars {
+        color: #d3d3d3;  /* Default grey color for empty stars */
+        font-size: 1.5rem;
+    }
+
+    .star.filled {
+        color: #FFD700;  /* Gold color for filled stars */
+    }
+
+    /* Ensure clickable card links have no link styling */
+    .product-list .card a {
+        color: black !important; /* Force text color to black */
+        text-decoration: none !important; /* Remove underline */
+    }
+
+    .product-list .card a:hover {
+        text-decoration: none !important; /* Prevent underline on hover */
+        color: black !important; /* Keep hover text color black */
+    }
+
+    /* Add hover effect to cards */
+    .card {
+        transition: box-shadow 0.3s ease-in-out;
+    }
+
+    .card:hover {
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+</style>
 
 {% block content %}
 <main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
@@ -15,29 +51,61 @@
             <div class="row">
                 {% for product in products %}
                     <div class="col-md-4 mb-4">
-                        <div class="card h-100">  <!-- h-100 ensures equal height cards -->
-                            {% if product.image %}
-                                <img src="{{ product.image.url }}" class="card-img-top" alt="{{ product.name }}">
-                            {% else %}
-                                <img src="{% static 'default-product-image.jpg' %}" class="card-img-top" alt="Product Image">
-                            {% endif %}
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">{{ product.name }}</h5>
-                                <p><strong>Vendor:</strong> {{ product.vendor_profile.company_name }}</p>
-                                <p><strong>Brand:</strong> {{ product.brand }}</p>
-                                <p><strong>Price:</strong> £{{ product.price }}</p>
-                                <p><strong>Description:</strong> {{ product.description }}</p>
+                        <!-- Make the entire card clickable -->
+                        <a href="{% url 'product_detail' product.id %}" style="color: black; text-decoration: none;">
+                            <div class="card h-100">
+                                {% if product.image %}
+                                    <img src="{{ product.image.url }}" class="card-img-top product-image" alt="{{ product.name }}">
+                                {% else %}
+                                    <img src="{% static 'default-product-image.jpg' %}" class="card-img-top product-image" alt="Product Image">
+                                {% endif %}
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">{{ product.name }}</h5>
 
-                                <!-- Display Vendor's email and address -->
-                               
-                                <p><strong>Vendor Address:</strong> {{ product.vendor_profile.address }}</p>
+                                    <!-- Show the star rating right after product name -->
+                                    <div class="rating-stars">
+                                        {% for i in ratings_range %}
+                                            <span class="star{% if i <= product.average_rating %} filled{% endif %}">&#9733;</span>
 
-                                <!-- Add to Cart link -->
-                                <div class="mt-auto">
-                                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary w-100">Add to Cart</a>
+                                        {% endfor %}
+
+                                    </div>
+                                    <p>Average Rating: {{ product.average_rating }}</p>
+
+                                    <p><strong>Vendor:</strong> {{ product.vendor_profile.company_name }}</p>
+                                    <p><strong>Brand:</strong> {{ product.brand }}</p>
+                                   <!-- <p><strong>Price:</strong> £{{ product.price }}</p>-->
+                                    <p><strong>Dynamic Price:</strong> £{{ product.dynamic_price }}</p>
+                                    <!-- Battery Details Section -->
+                                    {% if product.has_battery %}
+                                        <div class="battery-info mt-2">
+                                            <h6>Battery Details</h6>
+                                            <p><strong>Type:</strong> {{ product.battery_type }}</p>
+                                            <p><strong>Capacity:</strong> {{ product.battery_capacity }} kWh</p>
+                                            <p><strong>Cost:</strong> £{{ product.battery_cost|floatformat:2 }}</p>
+                                        </div>
+                                    {% endif %}
+
+                                    <!-- Truncate the description and add "Read More" functionality -->
+                                    <p class="card-text" id="desc-{{ product.id }}">
+                                        <strong>Description:</strong>
+                                        {% if product.description|length > 100 %}
+                                            <span class="short-desc">{{ product.description|truncatewords:20 }}...</span>
+                                            <span class="full-desc" style="display:none;">{{ product.description }}</span>
+                                            <a href="javascript:void(0);" class="read-more" onclick="toggleDescription({{ product.id }})" style="color: black; text-decoration: none;">Read More</a>
+                                        {% else %}
+                                            {{ product.description }}
+                                        {% endif %}
+                                    </p>
+
+                                    <!-- Vendor Address -->
+                                    <p><strong>Vendor Address:</strong> {{ product.vendor_profile.address }}</p>
+                                    <div class="mt-auto">
+                                        <a href="{% url 'add_to_cart' product.id %}" class="btn btn-primary w-100">Add to Cart</a>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
                 {% endfor %}
             </div>
@@ -46,4 +114,26 @@
         {% endif %}
     </div>
 </main>
+
+<script>
+    // JavaScript to toggle between short and full description
+    function toggleDescription(productId) {
+        var shortDesc = document.querySelector('#desc-' + productId + ' .short-desc');
+        var fullDesc = document.querySelector('#desc-' + productId + ' .full-desc');
+        var readMoreLink = document.querySelector('#desc-' + productId + ' .read-more');
+
+        if (shortDesc.style.display === "none") {
+            // If the full description is visible, show the short one and update the link text
+            shortDesc.style.display = "inline";
+            fullDesc.style.display = "none";
+            readMoreLink.innerHTML = "Read More";
+        } else {
+            // Otherwise, show the full description and update the link text
+            shortDesc.style.display = "none";
+            fullDesc.style.display = "inline";
+            readMoreLink.innerHTML = "Read Less";
+        }
+    }
+</script>
+
 {% endblock %}

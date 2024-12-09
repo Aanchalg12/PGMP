@@ -57,21 +57,66 @@
             </div>                       
         </div>
 
-        <!-- Card for Electricity Provider -->
-        <div class="col-lg-3 mb-3">
-            <div class="card card4 shadow">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title">Electricity Provider</h5>
-                        <i class="bi bi-lightbulb-fill"></i>
-                    </div>
-                    <p class="card-text">
-                        <span class="fw-bold fs-1">{{ electricity_provider_count }}</span>
-                       Total Electricity Provider
-                    </p>
-                </div>
-            </div>                       
+        <!-- Card for Pending Quotes -->
+<div class="col-lg-3 mb-3">
+    <div class="card card4 shadow">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title">Pending Quotes</h5>
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <p class="card-text">
+                <span class="fw-bold fs-1">{{ pending_quotes_count }}</span>
+                Pending Quotes
+            </p>
         </div>
-    </div>
+    </div>                       
+</div>
+
+<!-- Card for Completed Installations -->
+<div class="col-lg-3 mb-3">
+    <div class="card card5 shadow">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title">Completed Installations</h5>
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <p class="card-text">
+                <span class="fw-bold fs-1">{{ completed_installations_count }}</span>
+                Completed Installations
+            </p>
+        </div>
+    </div>                       
+</div>
+<div class="col-lg-3 mb-3">
+    <div class="card card4 shadow">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title">Completed Orders</h5>
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <p class="card-text">
+                <span class="fw-bold fs-1">{{ orders_count }}</span>
+                Completed Orders
+            </p>
+        </div>
+    </div>                       
+</div>
+<div class="col-lg-3 mb-3">
+    <div class="card card1 shadow">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="card-title">Completed Orders</h5>
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <p class="card-text">
+                <span class="fw-bold fs-1">{{ total_orders_count }}</span>
+                Total Orders
+            </p>
+        </div>
+    </div>                       
+</div>
+
 </main>
+
 {% endblock %}

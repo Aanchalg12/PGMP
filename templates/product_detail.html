@@ -1,0 +1,103 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %} Product Detail {% endblock %}
+<style>
+    .product-detail img.product-image {
+        border-radius: 8px;
+        width: 100%; /* Ensure image fills its container */
+        height: auto; /* Maintain aspect ratio */
+        max-height: 700px; /* Set a larger max height */
+        object-fit: cover; /* Crop to fit if necessary */
+    }
+    .product-details p {
+        margin: 0.5rem 0;
+    }
+    
+    .rating-stars {
+        color: #d3d3d3; /* Default grey color for empty stars */
+        font-size: 1.5rem;
+    }
+    
+    .rating-stars .star.filled {
+        color: #FFD700; /* Gold color for filled stars */
+    }
+    
+    .reviews {
+        margin-top: 1rem;
+    }
+    
+    .reviews .review {
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h2 class="h2">{{ product.name }}</h2>
+    </div>
+        <div class="row">
+        <!-- Left side: Product image -->
+        <div class="col-md-4">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid product-image">
+            {% else %}
+                <img src="{% static 'default-product-image.jpg' %}" alt="Product Image" class="img-fluid product-image">
+            {% endif %}
+        </div>
+
+        <!-- Right side: Product details -->
+        <div class="col-md-8">
+            <div class="product-details">
+                <p><strong>Description:</strong> {{ product.description }}</p>
+                <p><strong>Price:</strong> £{{ product.price }}</p>
+                <p><strong>Dynamic Price:</strong> £{{ dynamic_price }}</p>
+                <p><strong>Panel Size:</strong> {{ product.panel_size }} kW</p>
+
+                <!-- Conditionally show battery details -->
+                {% if product.has_battery %}
+                    <h4>Battery Details</h4>
+                    <ul>
+                        <li><strong>Battery Capacity:</strong> {{ product.battery_capacity }} kWh</li>
+                        <li><strong>Battery Type:</strong> {{ product.battery_type }}</li>
+                        <li><strong>Battery Cost:</strong> £{{ product.battery_cost }}</li>
+                    </ul>
+                {% endif %}
+            </div>
+
+            <!-- Display the average rating -->
+            <div class="product-rating my-3">
+                <strong>Average Rating:</strong>
+                <div class="rating-stars">
+                    {% for i in ratings_range %}
+                        <span class="star{% if i <= average_rating %} filled{% endif %}">&#9733;</span>
+                    {% endfor %}
+                </div>
+                <p>({{ average_rating|default:0 }} stars)</p>
+            </div>
+
+            <!-- Reviews Section -->
+            <h4>Reviews</h4>
+            <div class="reviews">
+                {% for review in reviews %}
+                    <div class="review mb-3">
+                        <p><strong>{{ review.user.username }}</strong> rated this product {{ review.rating }} stars</p>
+                        <p>{{ review.review_text }}</p>
+                    </div>
+                {% empty %}
+                    <p>No reviews yet.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Add Review Form -->
+            <h5 class="mt-4">Add a Review</h5>
+            <form method="post">
+                {% csrf_token %}
+                {{ review_form.as_p }}
+                <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock %}

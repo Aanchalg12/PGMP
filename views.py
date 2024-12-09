@@ -6,8 +6,8 @@ from datetime import timedelta
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login as auth_login, logout as auth_logout
-from .models import InstallationBooking, Profile, Installation, Order, Transaction, RateSetting, Bid, QuoteRequest, Product, SolarEstimation, Installer, CartItem, InstallerService, QuoteSubmission, Quote, QuoteRequestInstaller, QuoteSubmissionInstaller
-from .forms import LoginForm, UserEditForm, UserRegistrationForm, QuoteRequestForm, AcceptDeclineQuoteForm, QuoteForm
+from .models import InstallationBooking, Profile, Installation, Order, QuoteRequest, Product, SolarEstimation, CartItem, InstallerService, QuoteSubmission, Quote, QuoteRequestInstaller, QuoteSubmissionInstaller
+from .forms import LoginForm, UserEditForm, UserRegistrationForm, QuoteRequestForm, InstallerReviewForm
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from .forms import ProfileUpdateForm, UserForm, ProfileForm, SignupForm, ProductForm, QuoteSubmissionForm, CartItemForm, InstallationServiceForm, QuoteSubmissionInstallerForm
@@ -20,14 +20,172 @@ from django.db.models import Q
 from django.urls import reverse
 from django.db import transaction
 from datetime import date
-from geopy.distance import geodesic
 from solar_estimator.models import QuoteRequest, QuoteSubmission, QuoteSubmissionInstaller
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from solar_estimator.models import QuoteRequest, QuoteRequestInstaller, QuoteSubmission, QuoteSubmissionInstaller
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, F
+from django.db.models import Count
+from django.template.loader import render_to_string
+from xhtml2pdf import pisa
+from django.http import HttpResponse
+from decimal import Decimal
+from .forms import ReviewForm, BookingForm, InstallerReview
+from django.db.models import Avg 
+from django.core.paginator import Paginator
+
+@login_required
+def submit_installer_review(request, installer_id):
+    # Get the installer (profile) for the given installer_id
+    installer = get_object_or_404(Profile, id=installer_id, user_role='installer')
+
+    # Check if the user has already reviewed this installer
+    if InstallerReview.objects.filter(installer=installer, user=request.user).exists():
+        # Optionally, show a message that the user has already reviewed
+        return redirect('installer_details', installer_id=installer.id)
+
+    if request.method == 'POST':
+        # Handle the form submission
+        form = InstallerReviewForm(request.POST)
+        if form.is_valid():
+            # Create a new review instance
+            review = form.save(commit=False)
+            review.installer = installer
+            review.user = request.user
+            review.save()
+
+            # Redirect back to the installer's profile page with a success message
+            return redirect('installer_details', installer_id=installer.id)
+    else:
+        # Create a new form instance if the request method is GET
+        form = InstallerReviewForm()
+
+    return render(request, 'submit_installer_review.html', {
+        'installer': installer,
+        'form': form
+    })
+
+@login_required
+def completed_installations(request):
+    # Get the installer profile (assuming user is an installer)
+    profile = request.user.profile
+
+    # Fetch completed installations for this installer
+    completed_installations = InstallationBooking.objects.filter(installer=profile, status='completed')
+
+    # Pass the data to the template
+    return render(request, 'completed_installations.html', {
+        'completed_installations': completed_installations,
+    })
+
+@login_required
+def installation_detail(request, installation_id):
+    # Get the installation booking object
+    installation = get_object_or_404(InstallationBooking, id=installation_id, installer=request.user.profile)
+    
+    # Render the details page for the specific installation
+    return render(request, 'installation_detail.html', {
+        'installation': installation
+    })
+
+@login_required
+def installer_details(request, installer_id):
+    # Get the User object (installer) for the given installer_id
+    installer = get_object_or_404(Profile, id=installer_id, user_role='installer')
+
+    # Retrieve all reviews related to this installer (using the Profile relationship)
+    reviews = installer.reviews.all()
+    if not reviews:
+    # If there are no reviews, show "No ratings yet"
+        average_rating = None
+    else:
+        # Otherwise calculate the average rating
+        average_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+    # Aggregate statistics (average rating and review count)
+    stats = reviews.aggregate(
+        average_rating=Avg('rating'),
+        review_count=Count('id')
+    )
+
+    # Render the template with the correct data
+    return render(request, 'installer_details.html', {
+        'installer': installer,
+        'reviews': reviews,
+        'stats': stats,
+        'average_rating': average_rating,
+    })
+
+@login_required
+def generate_pdf_receipt(request, order_id):
+    # Fetch the order details from the database
+    try:
+        order = Order.objects.select_related('customer_profile__user', 'product').get(
+            id=order_id, customer_profile__user=request.user
+        )
+    except Order.DoesNotExist:
+        return HttpResponse("Order not found", status=404)
+
+    # Fetch the last solar estimation for the user
+    profile = request.user.profile
+    last_estimation = profile.estimations.order_by('-created_at').first()
+
+    if not last_estimation:
+        return HttpResponse("No estimation found. Please perform an estimation before proceeding.", status=400)
+
+    # Extract panel size from the last estimation
+    panel_size_kw = Decimal(last_estimation.estimated_size_kw)
+
+    # Initialize price calculations
+    dynamic_price = Decimal('0.00')
+    battery_cost = Decimal('0.00')
+
+    # Ensure product exists and calculate prices
+    if order.product:
+        # Calculate the dynamic price using the last estimated panel size
+        dynamic_price = Decimal(order.product.get_dynamic_price(panel_size_kw))
+
+        # Add battery cost if applicable
+        if order.product.has_battery:
+            battery_cost = Decimal(order.product.battery_cost or '0.00')
+
+    # Calculate the total cost
+    quantity = Decimal(order.quantity)
+    subtotal = (dynamic_price + battery_cost) * quantity
+    tax_rate = Decimal('0.20')  # Define tax rate
+    tax = subtotal * tax_rate
+    total = subtotal + tax
+
+    # Prepare context for the template
+    context = {
+        'order': order,
+        'quantity': order.quantity,
+        'dynamic_price': f"{dynamic_price:.2f}",
+        'battery_cost': f"{battery_cost:.2f}",
+        'total_per_unit': f"{(dynamic_price + battery_cost):.2f}",  # Add dynamic_price + battery_cost
+        'subtotal': f"{subtotal:.2f}",
+        'tax': f"{tax:.2f}",
+        'total': f"{total:.2f}",
+    }
+
+    # Render the receipt template
+    html_content = render_to_string('receipt_template.html', context)
+
+    # Convert the HTML to PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="Order_{order_id}_Receipt.pdf"'
+
+    # Use xhtml2pdf to generate the PDF
+    pisa_status = pisa.CreatePDF(html_content, dest=response)
+
+    # Handle PDF generation errors
+    if pisa_status.err:
+        return HttpResponse("Error generating PDF", status=500)
+
+    return response
+
+def solar_schemes(request):
+    return render(request, 'solar_schemes.html')
 
 def get_lat_lon_from_address(address):
     # Use a geocoding API to get latitude and longitude from the address
@@ -157,52 +315,73 @@ def admin_dashboard(request):
     customer_count = Profile.objects.filter(user_role='customer').count()
     vendor_count = Profile.objects.filter(user_role='vendor').count()
     installation_count = Profile.objects.filter(user_role='installer').count()
-    electricity_provider_count = Profile.objects.filter(user_role='electricity_provider').count()
+    pending_quotes_count = Quote.objects.filter(status='pending').count()
+    completed_installations_count = InstallationBooking.objects.filter(status='completed').count()
+    orders_count = Order.objects.filter(status='delivered').count()
+    total_orders_count = Order.objects.count()
 
     # Pass the counts to the template context
     context = {
         'customer_count': customer_count,
         'vendor_count': vendor_count,
         'installation_count': installation_count,
-        'electricity_provider_count': electricity_provider_count,
+        'pending_quotes_count': pending_quotes_count,
+        'completed_installations_count': completed_installations_count,
+        'orders_count' : orders_count,
+        'total_orders_count': total_orders_count,
     }
 
     return render(request, 'admin_dashboard.html', context)
 
 @login_required
 def customer_dashboard(request):
-    # Get the current user's profile
     profile = request.user.profile
-
-    # Fetch the most recent SolarEstimation for this user
     last_estimation = profile.estimations.order_by('-created_at').first()
 
     if not last_estimation:
         return render(request, 'customer_dashboard.html', {'error': 'No estimation found.'})
 
-    # Fetch recommended solar products based on the estimated size (panel_size)
-    recommended_products = Product.objects.filter(panel_size__gte=last_estimation.estimated_size_kw)
+    panel_size = last_estimation.estimated_size_kw
+    logger.debug(f"Panel size from last estimation: {panel_size}")  # Debugging the panel size
 
-    # Get user's address from the profile
-    user_address = profile.address  # Make sure address is available in Profile model
-    
-    # Find nearby installers based on address substring matching
+    # Fetch recommended products and calculate dynamic prices
+    recommended_products = Product.objects.filter(panel_size__gte=panel_size)
+    logger.debug(f"Found {recommended_products.count()} recommended products.")  # Debugging product count
+
+    for product in recommended_products:
+        product.dynamic_price = product.get_dynamic_price(panel_size)
+        logger.debug(f"Dynamic price for {product.name}: £{product.dynamic_price}")  # Debugging dynamic price
+
+    user_address = profile.address
+
     nearby_installers = []
+    installer_services = {}
     if user_address:
-        # Simplify the address by extracting a significant part (e.g., first city/region word)
-        user_location_keyword = user_address.split(',')[0].strip()  # Example: "Cambridge" from "Cambridge, UK"
-        
-        # Find installers whose addresses contain the user's location keyword
+        user_location_keyword = user_address.split(',')[0].strip()
         nearby_installers = Profile.objects.filter(
             user_role='installer',
             address__icontains=user_location_keyword
         )
 
-    # Pass all the data to the template
+        for installer in nearby_installers:
+            reviews = installer.reviews.all()
+            review_stats = reviews.aggregate(
+                average_rating=Avg('rating'),
+                review_count=Count('id')
+            )
+            
+            # Save the review stats in installer context
+            installer.average_rating = review_stats['average_rating']
+            installer.review_count = review_stats['review_count']
+
+            services = InstallerService.objects.filter(installer=installer)
+            installer_services[installer.id] = services
+
     context = {
         'last_estimation': last_estimation,
         'recommended_products': recommended_products,
         'nearby_installers': nearby_installers,
+        'installer_services': installer_services,
     }
 
     return render(request, 'customer_dashboard.html', context)
@@ -238,20 +417,29 @@ def search_results(request):
             results = Product.objects.filter(
                 Q(name__icontains=query) | Q(description__icontains=query)
             )
+        elif search_type == 'battery' and query:
+        # Search for batteries (only products with has_battery=True)
+            results = Product.objects.filter(
+                Q(name__icontains=query) | Q(description__icontains=query),
+                has_battery=True
+        )
 
     elif user_role == 'vendor':
         # Vendor: Search Products
         if search_type == 'product' and query:
-            # Search for products
+            # Restrict the search to products belonging to the logged-in vendor
             results = Product.objects.filter(
-                Q(name__icontains=query) | Q(description__icontains=query)
+                Q(vendor_profile=user_profile) &  # Filter by the vendor's profile
+                (Q(name__icontains=query) | Q(description__icontains=query))
             )
 
     elif user_role == 'installer':
         # Installer: Search Installation Requests
         if search_type == 'install_request' and query:
-            # Search for installation requests by customer profile username or address
+            # Ensure that only installation requests assigned to the installer are returned
             results = InstallationBooking.objects.filter(
+                installer=user_profile  # Filter installation requests by the installer
+            ).filter(
                 Q(customer_profile__user__username__icontains=query) |
                 Q(customer_profile__address__icontains=query)
             )
@@ -269,6 +457,12 @@ def search_results(request):
             results = InstallationBooking.objects.filter(
                 Q(customer_profile__user__username__icontains=query) |
                 Q(customer_profile__address__icontains=query)
+            )
+
+        elif search_type == 'product' and query:
+            # Restrict the search to products belonging to the logged-in vendor
+            results = Product.objects.filter(
+                (Q(name__icontains=query) | Q(description__icontains=query))
             )
 
     # Return results to the template
@@ -315,15 +509,26 @@ def vendor_dashboard(request):
     
     # Query for products and orders associated with the vendor's profile
     products = Product.objects.filter(vendor_profile=vendor_profile)
-    active_orders = Order.objects.filter(product__vendor_profile=vendor_profile)
+    active_orders = Order.objects.filter(product__vendor_profile=vendor_profile).order_by('-order_date')[:5]
     
     # Query for QuoteRequests based on the customer profile's user role
-    quote_requests = QuoteRequest.objects.filter(customer_profile__user_role='customer')
+    quote_requests = QuoteRequest.objects.filter(customer_profile__user_role='customer',submitted=False)
 
     return render(request, 'vendor_dashboard.html', {
         'products': products,
         'active_orders': active_orders,
         'quote_requests': quote_requests
+    })
+
+@login_required
+def vendor_view_quotes(request):
+    vendor_profile = request.user.profile  # Get the Profile of the logged-in vendor
+    
+    # Get all submitted quotes for the vendor's profile
+    quotes = QuoteSubmission.objects.filter(vendor=vendor_profile)
+
+    return render(request, 'vendor_view_quotes.html', {
+        'quotes': quotes
     })
 
 @login_required
@@ -393,21 +598,44 @@ def order_details(request, order_id):
 
 @login_required
 def add_product(request):
-    # Get the vendor profile of the current user if they are a vendor or an admin
-    if request.user.profile.user_role in ['vendor', 'admin']:
-        # If the user is an admin, you may want to set the vendor profile differently
-        vendor_profile = request.user.profile if request.user.profile.user_role == 'vendor' else None
-    else:
-        return redirect('unauthorized_access')  # Redirect if the user is not a vendor or admin
+    # Ensure the user has the appropriate role
+    if request.user.profile.user_role not in ['vendor', 'admin']:
+        return redirect('unauthorized_access')  # Redirect if unauthorized
+
+    # Determine vendor profile
+    vendor_profile = request.user.profile if request.user.profile.user_role == 'vendor' else None
 
     if request.method == "POST":
         form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
+
+            # Assign vendor profile if applicable
             if vendor_profile:
-                product.vendor_profile = vendor_profile  # Assign vendor profile for vendors
-            product.save()
-            return redirect('vendor_dashboard')  # Redirect to the vendor dashboard after saving
+                product.vendor_profile = vendor_profile
+            
+            # Handle validation and defaults for battery-related fields
+            has_battery = form.cleaned_data.get('has_battery', False)
+            if has_battery:
+                battery_capacity = form.cleaned_data.get('battery_capacity')
+                battery_type = form.cleaned_data.get('battery_type')
+                battery_cost = form.cleaned_data.get('battery_cost')
+                
+                if not battery_capacity or not battery_type or not battery_cost:
+                    messages.error(request, "Please provide all battery details.")
+                    return render(request, 'add_product.html', {'form': form})
+
+                # Set battery fields on the product
+                product.has_battery = has_battery
+                product.battery_capacity = battery_capacity
+                product.battery_type = battery_type
+                product.battery_cost = battery_cost
+
+            product.save()  # Save the product
+            messages.success(request, "Product added successfully.")
+            return redirect('vendor_dashboard')  # Redirect to vendor dashboard
+        else:
+            messages.error(request, "There was an error with your submission. Please try again.")
     else:
         form = ProductForm()
 
@@ -446,7 +674,11 @@ def delete_product(request, product_id):
     return render(request, 'confirm_delete.html', {'product': product})
 
 def view_product(request, product_id):
-    product = get_object_or_404(Product, id=product_id)  # Retrieve the product
+   
+    # Retrieve the product object or return a 404 if it doesn't exist
+    product = get_object_or_404(Product, id=product_id)
+
+    # Render the product details in the view_product template
     return render(request, 'view_product.html', {'product': product})
 
 def not_authorized(request):
@@ -462,6 +694,8 @@ def submit_quote(request, quote_request_id):
             quote_submission = form.save(commit=False)
             quote_submission.vendor = request.user.profile  # Assuming Profile model has user link
             quote_submission.quote_request = quote_request
+            quote_request.submitted = True
+            quote_request.save()
             quote_submission.save()
             return redirect('vendor_dashboard')  # Redirect to vendor's dashboard or success page
     else:
@@ -499,7 +733,6 @@ def customer_quotes(request):
     }
 
     return render(request, 'customer_quotes.html', context)
-
 
 @login_required
 def accept_quote(request, quote_id):
@@ -565,7 +798,7 @@ def get_solar_irradiance(latitude, longitude):
     Fetches daily solar irradiance data for an entire year from NASA's POWER API.
     Returns the yearly average irradiance in kWh/m²/day.
     """
-    year = datetime.datetime.now().year
+    year = datetime.now().year
     url = f"https://power.larc.nasa.gov/api/temporal/daily/point?"
     params = {
         "start": f"{year}0101",  # Start of the current year
@@ -604,6 +837,7 @@ def get_solar_irradiance(latitude, longitude):
         return None
 
 # Adjust these based on typical solar panel costs and efficiency for your area
+PANEL_COST_PER_KW = 1500
 INSTALLATION_COST_PER_KW = 1200  # Estimated cost per kW of installed solar panels in £
 ELECTRICITY_RATE_PER_KWH = 0.25  # Average cost of electricity per kWh in £
 ANNUAL_SAVINGS_PERCENTAGE = 0.6  # Percentage of electricity savings assumed
@@ -633,19 +867,23 @@ def calculate_solar_panel_size(electricity_bill, solar_irradiance):
     panel_size_kw = required_area_m2 * 0.3
     rounded_panel_size_kw = math.ceil(panel_size_kw)
 
+     # Calculate the total cost of the solar panel system (including panels and installation)
+    panel_cost = rounded_panel_size_kw * PANEL_COST_PER_KW  # Cost of panels
+    installation_cost = rounded_panel_size_kw * INSTALLATION_COST_PER_KW  # Installation cost
+    total_system_cost = panel_cost + installation_cost  # Total system cost
+
     # Calculate the estimated annual savings on the electricity bill
     annual_savings = target_consumption_kwh * ELECTRICITY_RATE_PER_KWH
 
-    # Calculate the installation cost for the solar panels
-    installation_cost = rounded_panel_size_kw * INSTALLATION_COST_PER_KW
-
     # Calculate the estimated payback period (years)
-    payback_period_years = installation_cost / annual_savings if annual_savings else float('inf')
+    payback_period_years = total_system_cost / annual_savings if annual_savings else float('inf')
 
     return {
         "panel_size_kw": rounded_panel_size_kw,
         "annual_savings": round(annual_savings, 2),
+        "panel_cost": panel_cost,
         "installation_cost": installation_cost,
+        "total_system_cost": total_system_cost,
         "payback_period_years": round(payback_period_years, 2)
     }
 
@@ -690,6 +928,9 @@ def estimate_solar_size(request):
         request.session['annual_savings'] = calculations["annual_savings"]
         request.session['installation_cost'] = calculations["installation_cost"]
         request.session['payback_period_years'] = calculations["payback_period_years"]
+        request.session['panel_cost'] = calculations["panel_cost"]
+        request.session['total_system_cost'] = calculations["total_system_cost"]
+        request.session['postcode'] = postcode
 
         # Save the estimation result to the database if the user is authenticated
         if request.user.is_authenticated:
@@ -726,10 +967,12 @@ def estimation_result(request):
     estimated_size_kw = request.session.get('estimated_size_kw')
     annual_savings = request.session.get('annual_savings')
     installation_cost = request.session.get('installation_cost')
+    panel_cost = request.session.get('panel_cost')  # Get panel cost from session
+    total_system_cost = request.session.get('total_system_cost')  # Get total system cost from session
     payback_period_years = request.session.get('payback_period_years')
 
     # If required data is missing, redirect to the estimation form
-    if not all([longitude, latitude, solar_irradiance, estimated_size_kw, annual_savings, installation_cost, payback_period_years]):
+    if not all([longitude, latitude, solar_irradiance, estimated_size_kw, annual_savings, installation_cost, panel_cost, total_system_cost, payback_period_years]):
         return redirect('estimate_solar_size')
 
     # Pass the values to the template
@@ -740,6 +983,8 @@ def estimation_result(request):
         'estimated_size_kw': estimated_size_kw,
         'annual_savings': annual_savings,
         'installation_cost': installation_cost,
+        'panel_cost': panel_cost,  # Pass panel cost to the template
+        'total_system_cost': total_system_cost,  # Pass total system cost to the template
         'payback_period_years': payback_period_years
     })
 
@@ -748,15 +993,30 @@ def view_estimations(request):
     return render(request, "view_estimations.html", {"estimations": estimations})
 
 def product_vendors(request):
-    # Fetch all products and pass them to the template
+    # Retrieve all products
     products = Product.objects.all()
 
-    # Prepare context with products to render in the template
-    context = {
-        'products': products
-    }
+    # Retrieve the panel size estimation, default to 1 if not available
+    panel_size = 1  # Default panel size in case no estimation exists
+    if request.user.is_authenticated:
+        profile = request.user.profile
+        last_estimation = profile.estimations.order_by('-created_at').first()
+        if last_estimation:
+            panel_size = last_estimation.estimated_size_kw
 
-    return render(request, 'product_vendors.html', context)
+    # Calculate average ratings and dynamic prices for each product
+    for product in products:
+        # Set the average rating
+        average_rating = product.reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+        product.average_rating = round(average_rating, 1)  # Add it to the product instance
+
+        # Set the dynamic price
+        product.dynamic_price = product.get_dynamic_price(panel_size)  # Use the method from Product model
+
+    return render(request, 'product_vendors.html', {
+        'products': products,
+        'ratings_range': range(1, 6)  # Assuming a 1-5 star rating system
+    })
 
 @login_required
 def add_to_cart(request, product_id):
@@ -767,19 +1027,23 @@ def add_to_cart(request, product_id):
     if request.user.profile.user_role != 'customer':
         return redirect('home')  # Or handle this appropriately
 
+    # Get the panel size (you can pass this dynamically from the product or user selection)
+    panel_size_kw = product.panel_size  # Or get this from user input if available
+
     # Add the product to the cart (or update quantity if already in cart)
     cart_item, created = CartItem.objects.get_or_create(
         customer_profile=request.user.profile,
         product=product,
-        defaults={'quantity': 1}
+        defaults={'quantity': 1}  # Default quantity if the item doesn't exist in the cart
     )
 
     if not created:
+        # If the item already exists in the cart, just update the quantity
         cart_item.quantity += 1
         cart_item.save()
 
-    # Redirect to the shopping_cart page after adding the product
-    return redirect('shopping_cart')  # Change 'cart' to 'shopping_cart'
+    # Redirect to the shopping cart page after adding the product
+    return redirect('shopping_cart')  # Ensure the correct redirect
 
 @login_required
 def remove_from_cart(request, item_id):
@@ -794,50 +1058,118 @@ def remove_from_cart(request, item_id):
 
 @login_required
 def checkout(request):
-    # Get the current user's cart items
+    # Fetch the current user's cart items
     cart_items = CartItem.objects.filter(customer_profile=request.user.profile)
 
     if not cart_items.exists():
-        return redirect('shopping_cart')  # If cart is empty, redirect to shopping cart
+        return redirect('shopping_cart')  # If the cart is empty, redirect to the shopping cart page
 
-    total_price = sum(item.product.price * item.quantity for item in cart_items)
+    # Fetch the last solar estimation for the user
+    profile = request.user.profile
+    last_estimation = profile.estimations.order_by('-created_at').first()
+    if not last_estimation:
+        return redirect('shopping_cart')  # Redirect if no estimation found
 
+    # Get the panel size (kW) from the estimation
+    panel_size_kw = Decimal(last_estimation.estimated_size_kw)
+
+    # Initialize variables for dynamic pricing calculations
+    total_cart_price = Decimal('0.00')
+    panel_cost = Decimal('0.00')
+
+    # Calculate the dynamic price and total cart price for all cart items
+    for item in cart_items:
+        # Use the dynamic pricing logic from the Product model
+        item.dynamic_price = Decimal(item.product.get_dynamic_price(panel_size_kw))  # Call your method
+        battery_cost = Decimal(item.product.battery_cost or '0.00')  # Add battery cost, if applicable
+        item_total = (item.dynamic_price + battery_cost) * Decimal(item.quantity)  # Include battery cost
+        total_cart_price += item_total
+        panel_cost += item_total
+
+    # Handle checkout form submission
     if request.method == 'POST':
-        with transaction.atomic():  # Ensure atomic transaction
-            for item in cart_items:
-                # Create the order and associate it with the customer and vendor
-                order = Order.objects.create(
-                    customer_profile=request.user.profile,
-                    vendor_profile=item.product.vendor_profile,  # Link to vendor profile
-                    product=item.product,
-                    quantity=item.quantity,
-                    status='pending',  # Order status is 'pending'
-                    order_date=date.today(),
-                )
-                # Delete the cart item after creating the order
-                item.delete()
+        try:
+            with transaction.atomic():  # Ensure atomicity for stock updates and order creation
+                for item in cart_items:
+                    product = item.product
 
-        # Redirect to 'my_orders' page after placing the order
-        return redirect('my_orders')  # Redirect to the page where the user can view their orders
+                    # Validate stock quantity
+                    if product.stock_quantity < item.quantity:
+                        raise ValueError(f"Not enough stock for {product.name}. Only {product.stock_quantity} left.")
 
-    # Render the checkout page with cart items and total price
+                    # Create the order
+                    Order.objects.create(
+                        customer_profile=request.user.profile,
+                        vendor_profile=product.vendor_profile,
+                        product=product,
+                        quantity=item.quantity,
+                        status='pending',
+                        order_date=date.today(),
+                    )
+
+                    # Remove the cart item
+                    item.delete()
+
+            # Redirect to orders page after successful checkout
+            return redirect('my_orders')
+
+        except ValueError as e:
+            # Handle stock validation error and re-render checkout page with the error message
+            return render(request, 'checkout.html', {
+                'cart_items': cart_items,
+                'total_cart_price': total_cart_price.quantize(Decimal('0.01')),
+                'error': str(e),
+            })
+
+    # Render the checkout page
     return render(request, 'checkout.html', {
         'cart_items': cart_items,
-        'total_price': total_price,
+        'total_cart_price': total_cart_price.quantize(Decimal('0.01')),
     })
 
 @login_required
 def my_orders(request):
+    # Fetch the logged-in user's profile
+    profile = request.user.profile
+
+    # Fetch the last solar estimation for the user
+    last_estimation = profile.estimations.order_by('-created_at').first()
+
+    if not last_estimation:
+        return render(request, 'shopping_cart.html', {
+            'error': 'No estimation found. Please perform an estimation before proceeding.',
+        })
+
+    # Extract relevant data from the last estimation (panel size in kW)
+    panel_size_kw = Decimal(last_estimation.estimated_size_kw)  # panel size in kW from the last estimation
+
     # Fetch all orders related to the logged-in customer
     orders = Order.objects.filter(customer_profile=request.user.profile)
 
-    # Prepare orders with computed total price (product price * quantity)
+    # Prepare orders with computed dynamic price, battery cost, and total price
     order_details = []
     for order in orders:
-        total_price = order.product.price * order.quantity
+        # Initialize price calculations
+        dynamic_price = Decimal('0.00')
+        battery_cost = Decimal('0.00')
+
+        # Ensure product exists and calculate dynamic price based on the panel size from the last estimation
+        if order.product:
+            # Calculate dynamic price using the panel size from the last estimation
+            dynamic_price = Decimal(order.product.get_dynamic_price(panel_size_kw))  # Dynamic price per unit
+
+            # If the product has a battery, add its cost to the total
+            if order.product.has_battery:
+                battery_cost = Decimal(order.product.battery_cost or '0.00')
+
+        # Calculate the total price: (dynamic price + battery cost) * quantity
+        total_price = (dynamic_price + battery_cost) * Decimal(order.quantity)
+
         order_details.append({
             'order': order,
-            'total_price': total_price
+            'dynamic_price': dynamic_price.quantize(Decimal('0.01')),  # Dynamic price per unit
+            'battery_cost': battery_cost.quantize(Decimal('0.01')),  # Battery cost per unit
+            'total_price': total_price.quantize(Decimal('0.01'))  # Total price for the order
         })
 
     # Fetch installation bookings for the customer
@@ -848,7 +1180,6 @@ def my_orders(request):
         'order_details': order_details,
         'installations': installations  # Add installations to the context
     })
-
 
 def edit_cart_item(request, item_id):
     # Get the CartItem object
@@ -874,72 +1205,101 @@ def order_confirmation(request):
 
 @login_required
 def shopping_cart(request):
-    # Get the cart items for the logged-in user
-    cart_items = CartItem.objects.filter(customer_profile=request.user.profile)
+    profile = request.user.profile
+
+    # Fetch the last solar estimation for the user
+    last_estimation = profile.estimations.order_by('-created_at').first()
+    if not last_estimation:
+        return render(request, 'shopping_cart.html', {
+            'error': 'No estimation found. Please perform an estimation before proceeding.',
+        })
+
+    # Extract relevant data from the last estimation
+    panel_size_kw = Decimal(last_estimation.estimated_size_kw)  # Panel size (kW)
+    solar_irradiance = float(last_estimation.solar_irradiance)  # Solar irradiance (kWh/m²/day)
+    electricity_bill = float(last_estimation.electricity_bill)  # Monthly electricity bill (£)
+
+    # Fetch the most recent installation booking to determine installation cost
+    last_booking = profile.customer_installations.order_by('-installation_date').first()
+    installation_cost = Decimal(last_booking.total_price) if last_booking else Decimal('0.00')
+
+    # Fetch cart items for the user
+    cart_items = CartItem.objects.filter(customer_profile=profile)
+
+    # Initialize variables for calculating total cart price and panel cost
+    total_cart_price = Decimal('0.00')
+    panel_cost = Decimal('0.00')
+
+    # Calculate total cart price and panel cost based on selected items
+    for item in cart_items:
+        item.dynamic_price = Decimal(item.product.get_dynamic_price(panel_size_kw))  # Dynamic price for panel
+        battery_cost = Decimal(item.product.battery_cost or '0.00')  # Battery cost, if applicable
+        item_total = (item.dynamic_price + battery_cost) * Decimal(item.quantity)  # Include battery cost
+        total_cart_price += item_total
+        panel_cost += item_total
+
+    logger.debug(f"Cart items dynamic prices and total cart price: {total_cart_price}")
+
+    # Constants
+    ELECTRICITY_RATE_PER_KWH = Decimal('0.25')  # Example: £0.25 per kWh
+    ANNUAL_SAVINGS_PERCENTAGE = Decimal('0.60')  # Target solar coverage: 60% of the annual bill
+
+    # Calculate annual bill (12 months) and annual consumption in kWh
+    annual_bill = Decimal(electricity_bill) * Decimal('12')  # Convert to Decimal and multiply by 12 for annual bill
+    annual_consumption_kwh = annual_bill / ELECTRICITY_RATE_PER_KWH  # Annual consumption in kWh
+
+    # Calculate target consumption (the amount solar will cover)
+    target_consumption_kwh = annual_consumption_kwh * ANNUAL_SAVINGS_PERCENTAGE
+
+    # Calculate the estimated annual savings (£) from solar power
+    annual_savings = target_consumption_kwh * ELECTRICITY_RATE_PER_KWH  # This gives savings in GBP per year
     
-    # Calculate the total price of items in the cart
-    total_price = sum(item.quantity * item.product.price for item in cart_items)
-    
-    # Render the shopping cart page with the cart items and total price
-    return render(request, 'shopping_cart.html', {'cart_items': cart_items, 'total_price': total_price})
+    # Handle edge case where annual savings are 0
+    if annual_savings == 0:
+        payback_period_years = Decimal('0.00')
+    else:
+        # Calculate total system cost (panel cost + installation cost)
+        total_system_cost = panel_cost + installation_cost
 
-@login_required
-def provider_dashboard(request):
-    if request.user.profile.user_role != 'electricity_provider':
-        return redirect('home')  # Redirect if not an electricity provider
+        # Calculate payback period (years) based on total system cost and annual savings
+        payback_period_years = total_system_cost / annual_savings
 
-    # Fetch active and withdrawn bids
-    active_bids = Bid.objects.filter(provider_profile=request.user.profile, status='active')
-    completed_transactions = Transaction.objects.filter(provider_profile=request.user.profile).order_by('-date')
+    # Log values for debugging
+    logger.debug(f"Annual Bill: {annual_bill}")
+    logger.debug(f"Annual Consumption (kWh): {annual_consumption_kwh}")
+    logger.debug(f"Target Consumption (kWh): {target_consumption_kwh}")
+    logger.debug(f"Annual Savings (£): {annual_savings}")
+    logger.debug(f"Payback Period (years): {payback_period_years}")
 
-    # Get or create rate setting
-    rate_setting, created = RateSetting.objects.get_or_create(provider_profile=request.user.profile)
+    total_price = total_cart_price
 
-    # Check if the effective date for a new rate has arrived or passed, update current rate if so
-    if rate_setting.effective_date and rate_setting.effective_date <= timezone.now().date():
-        if rate_setting.new_buyback_rate:
-            rate_setting.current_buyback_rate = rate_setting.new_buyback_rate
-            rate_setting.new_buyback_rate = None  # Reset new rate after applying it
-            rate_setting.effective_date = None  # Reset effective date after applying it
-            rate_setting.save()
+    # Handle the case when no cart items are selected
+    if not cart_items:
+        return render(request, 'shopping_cart.html', {
+            'error': 'Your cart is empty.',
+            'panel_cost': panel_cost.quantize(Decimal('0.01')),
+            'estimated_annual_savings': annual_savings.quantize(Decimal('0.01')),
+            'total_system_cost': total_system_cost.quantize(Decimal('0.01')),
+            'payback_period_years': payback_period_years.quantize(Decimal('0.01')),
+            'solar_irradiance': solar_irradiance,
+            'panel_size_kw': panel_size_kw,
+            'installation_cost': installation_cost.quantize(Decimal('0.01')),
+            'total_price': total_price.quantize(Decimal('0.01')),  # Show dynamic price total
+        })
 
-    # Handle form submission for updating the rate
-    if request.method == 'POST' and 'update_rate' in request.POST:
-        new_rate = request.POST.get('new_buyback_rate')
-        effective_date = request.POST.get('effective_date')
-        
-        if new_rate and effective_date:
-            rate_setting.new_buyback_rate = new_rate
-            rate_setting.effective_date = effective_date
-            rate_setting.save()
-            messages.success(request, "Buyback rate updated successfully.")
-        else:
-            messages.error(request, "Please provide a valid rate and effective date.")
-
-    context = {
-        'active_bids': active_bids,
-        'completed_transactions': completed_transactions,
-        'rate_setting': rate_setting,
-    }
-    return render(request, 'provider_dashboard.html', context)
-
-@login_required
-def view_bid(request, bid_id):
-    bid = get_object_or_404(Bid, id=bid_id, provider_profile=request.user.profile)
-    return render(request, 'view_bid.html', {'bid': bid})
-
-@login_required
-def edit_bid(request, bid_id):
-    # Add logic to edit the bid amount or expiration date
-    pass
-
-@login_required
-def withdraw_bid(request, bid_id):
-    bid = get_object_or_404(Bid, id=bid_id, provider_profile=request.user.profile)
-    bid.status = 'withdrawn'
-    bid.save()
-    messages.success(request, "Bid withdrawn successfully.")
-    return redirect('provider_dashboard')
+    # Pass data to the template for cart with items
+    return render(request, 'shopping_cart.html', {
+        'cart_items': cart_items,
+        'total_cart_price': total_cart_price.quantize(Decimal('0.01')),
+        'panel_cost': panel_cost.quantize(Decimal('0.01')),  # Based on selected items
+        'panel_size_kw': panel_size_kw,
+        'installation_cost': installation_cost.quantize(Decimal('0.01')),
+        'solar_irradiance': solar_irradiance,
+        'estimated_annual_savings': annual_savings.quantize(Decimal('0.01')),
+        'total_system_cost': total_system_cost.quantize(Decimal('0.01')),  # Corrected to Panel Cost + Installation Cost
+        'payback_period_years': payback_period_years.quantize(Decimal('0.01')),
+        'total_price': total_price.quantize(Decimal('0.01')),  # Corrected to Dynamic Price * Quantity
+    })
 
 @login_required
 def user_management(request):
@@ -1019,6 +1379,9 @@ def profile(request):
     user_form = UserForm(instance=request.user)
     profile_form = ProfileForm(instance=request.user.profile)
 
+    # Determine if the Company Name field should be displayed
+    show_company_name = request.user.profile.user_role in ['vendor', 'installer', 'admin']
+
     if request.method == 'POST':
         # Re-initialize the forms with POST data and files
         user_form = UserForm(request.POST, instance=request.user)
@@ -1035,6 +1398,7 @@ def profile(request):
     return render(request, 'profile.html', {
         'user_form': user_form,
         'profile_form': profile_form,
+        'show_company_name': show_company_name,  # Pass flag to the template
     })
 
 @login_required
@@ -1058,7 +1422,7 @@ def settings(request):
 
 @login_required
 def reports(request):
-        # Check if the user is an admin
+    # Check if the user is an admin
     if request.user.profile.user_role != 'admin':
         return redirect('not_authorized')  # Or handle unauthorized access differently
 
@@ -1084,18 +1448,44 @@ def reports(request):
     # For overall stats (e.g., total installations)
     total_installations = installations.count()
     pending_installations = installations.filter(status='pending').count()
+    incomplete_installations = installations.filter(status='incomplete').count()
     completed_installations = installations.filter(status='completed').count()
+    
+    # Orders data
+    orders = Order.objects.all()
+    total_orders = orders.count()
+    pending_orders = orders.filter(status='pending').count()
+    shipped_orders = orders.filter(status='shipped').count()
+    delivered_orders = orders.filter(status='delivered').count()
+
+    # Pagination setup
+    paginator_installations = Paginator(installations, 5)  # Show 5 installations per page
+    paginator_orders = Paginator(orders, 5)  # Show 5 orders per page
+
+    page_number_installations = request.GET.get('page_installations')
+    page_number_orders = request.GET.get('page_orders')
+
+    paginated_installations = paginator_installations.get_page(page_number_installations)
+    paginated_orders = paginator_orders.get_page(page_number_orders)
     
     # Render the report template with necessary data
     return render(request, 'reports.html', {
-        'installations': installations,
+        'installations': paginated_installations,
         'installations_count_by_status': installations_count_by_status,
         'total_installations': total_installations,
         'pending_installations': pending_installations,
+        'incomplete_installations': incomplete_installations,
         'completed_installations': completed_installations,
         'start_date': start_date,
         'end_date': end_date,
         'status_filter': status_filter,
+        'orders': paginated_orders,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'delivered_orders': delivered_orders,
+        'shipped_orders': shipped_orders,
+        'paginated_installations': paginated_installations,
+        'paginated_orders': paginated_orders,
     })
 
 def home(request):
@@ -1115,42 +1505,133 @@ def installation_services(request):
     # Fetch all services to display to the customer
     services = InstallerService.objects.all()
 
+    # Prepare a list of services with average ratings and review counts
+    services_with_ratings = []
+    for service in services:
+        # Aggregate the average rating and review count for the service's installer
+        stats = service.installer.reviews.aggregate(
+            average_rating=Avg('rating'),
+            review_count=Count('id')
+        )
+        
+        services_with_ratings.append({
+            'service': service,
+            'average_rating': stats['average_rating'] or 0,
+            'review_count': stats['review_count']
+        })
+
     # Retrieve the last solar estimation associated with the user's profile
     last_estimation = SolarEstimation.objects.filter(user=user_profile).last()
 
-    # Pass both services and last estimation to the template
+    # Pass both services with ratings and last estimation to the template
     return render(request, 'installation_services.html', {
-        'services': services,
+        'services_with_ratings': services_with_ratings,
         'last_estimation': last_estimation
     })
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 @login_required
 def book_service(request, service_id):
+    # Fetch the service and user profile
     service = get_object_or_404(InstallerService, id=service_id)
-    user_profile = request.user.profile
+    user_profile = request.user.profile  # Assumes the user has a `Profile`
 
-    # Fetch the first QuoteSubmissionInstaller related to the installer for this service
-    quote_submission_installer = QuoteSubmissionInstaller.objects.filter(installer=service.installer).first()
+    logger.info("Attempting to book service ID: %s for user ID: %s", service_id, request.user.id)
 
-    if not quote_submission_installer:
-        messages.error(request, "No quote submission found for this installer.")
-        return redirect('customer_dashboard')  # Adjust this to a relevant page
+    # Fetch the user's most recent solar estimation
+    last_estimation = user_profile.estimations.order_by('-created_at').first()
+    if last_estimation:
+        panel_size = last_estimation.estimated_size_kw
+        logger.info("Using panel size from last estimation: %s kW", panel_size)
+    else:
+        panel_size = 1.0  # Default size if no estimation exists
+        logger.warning("No solar estimation found for user. Defaulting panel size to 1.0 kW.")
 
-    # Create an InstallationBooking object
-    installation_booking = InstallationBooking.objects.create(
-        quote_submission_installer=quote_submission_installer,
-        installer=service.installer,
-        customer_profile=user_profile,
-        solar_panel_size=1.0,  # Adjust this based on user selection
-        installation_date=datetime.now(),  # You can use a different date if needed
-        status='pending',  # Default status
+    # Calculate the final installation price
+    final_price = service.price * (Decimal('1.5') ** Decimal(panel_size - 1)) if panel_size > 1.0 else service.price
+
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            desired_date = form.cleaned_data['desired_date']
+            installation_date = datetime.combine(desired_date, datetime.min.time())
+            installation_date = timezone.make_aware(installation_date)
+
+            # Check if the installer is already booked on the desired date
+            if InstallationBooking.objects.filter(
+                installer=service.installer,
+                installation_date=installation_date
+            ).exists():
+                logger.error(
+                    "Installer %s is already booked for date: %s", service.installer, installation_date
+                )
+                messages.error(
+                    request, "The installer is already booked for this date. Please choose another date."
+                )
+                return render(
+                    request, 'book_service.html', {
+                        'service': service,
+                        'form': form,
+                        'panel_size': panel_size,
+                        'final_price': final_price,
+                    }
+                )
+
+            # Ensure the service has an associated quote_submission_installer
+            if not service.quote_submission_installer:
+                logger.error("Service ID %s has no associated quote_submission_installer.", service.id)
+                messages.error(
+                    request, "This service does not have an associated installer. Please contact support."
+                )
+                return render(
+                    request, 'book_service.html', {
+                        'service': service,
+                        'form': form,
+                        'panel_size': panel_size,
+                        'final_price': final_price,
+                    }
+                )
+
+            # Create a new booking
+            try:
+                booking = InstallationBooking.objects.create(
+                    quote_submission_installer=service.quote_submission_installer,
+                    installer=service.installer,
+                    customer_profile=user_profile,
+                    solar_panel_size=panel_size,
+                    installation_date=installation_date,
+                    status='pending',
+                    total_price=final_price,
+                )
+                logger.info(
+                    "Booking created successfully for user %s (Booking ID: %s)", request.user.username, booking.id
+                )
+                messages.success(
+                    request, f"Your booking has been confirmed! Final price: £{final_price}"
+                )
+                return redirect('my_orders')  # Redirect user to their orders page
+            except Exception as e:
+                logger.error("Failed to create booking for service ID %s: %s", service_id, str(e))
+                messages.error(
+                    request, "An error occurred while creating your booking. Please try again or contact support."
+                )
+        else:
+            logger.error("Booking form validation failed for user ID: %s. Errors: %s", request.user.id, form.errors)
+    else:
+        form = BookingForm()  # Serve an empty form for GET requests
+
+    # Render the booking form and service details
+    return render(
+        request, 'book_service.html', {
+            'service': service,
+            'form': form,
+            'panel_size': panel_size,
+            'final_price': final_price,
+        }
     )
-
-    # Show a success message
-    messages.success(request, "Service booked successfully. Your request is now pending approval from the installer.")
-
-    # Redirect to My Orders (the page showing the customer's orders)
-    return redirect('my_orders')
 
 def install_request_detail(request, id):
     # Fetch the installation booking by ID
@@ -1225,7 +1706,6 @@ def accept_installation(request, quote_submission_id):
     messages.success(request, "Quote accepted and installer booked successfully!")
     return redirect('customer_quotes')
 
-
 @login_required
 def decline_installation(request, quote_submission_id):
     # Retrieve the quote submission for the installer or return a 404 if not found
@@ -1259,8 +1739,7 @@ def get_quote(request, estimation_id):
     # Use the `estimated_size_kw` field directly
     quote_request = QuoteRequestInstaller.objects.create(
         customer_profile=customer_profile,
-        panel_size_min=estimation.estimated_size_kw,  # Use estimated_size_kw as both min and max if needed
-        panel_size_max=estimation.estimated_size_kw,  # Or set a range if appropriate
+        panel_size=estimation.estimated_size_kw,  # Use
         quote_deadline=timezone.now() + timedelta(days=7),  # example deadline
         status='pending'
     )
@@ -1289,7 +1768,13 @@ def installation_dashboard(request):
     scheduled_installations = Installation.objects.exclude(scheduled_date__isnull=True).order_by('scheduled_date')
 
     # Show only pending quote requests for this installer
-    pending_quotes = Quote.objects.filter(installer_profile=profile, status='pending')
+    today = date.today()
+    pending_quotes = Quote.objects.filter(
+        installer_profile=profile,
+        status='pending',  # Pending status
+        quote_request__quote_deadline__gte=today  # Deadline not passed
+    )
+
     quotes_submitted = Quote.objects.filter(installer_profile=profile)
 
     return render(request, 'installer_dashboard.html', {
@@ -1375,19 +1860,6 @@ def delete_installation_service(request, service_id):
     return redirect('installer_dashboard')
 
 @login_required
-def installation_detail(request, installation_id):
-    # Get the installation object or return a 404 if it doesn't exist
-    installation = get_object_or_404(Installation, id=installation_id)
-    
-    # Check permissions if needed, e.g., only the customer or admin can view
-    if request.user.profile.user_role == 'customer' and installation.customer_profile != request.user.profile:
-        return redirect('not_authorized')  # Redirect if the user isn't allowed to view this
-
-    return render(request, 'installation_detail.html', {
-        'installation': installation,
-    })
-
-@login_required
 def install_requests(request):
     # Check user role
     print(f"User role: {request.user.profile.user_role}")  # Debugging line to check the role
@@ -1409,20 +1881,6 @@ def install_requests(request):
     return render(request, 'install_requests.html', {'installations': installations})
 
 @login_required
-def transactions(request):
-    # Allow access for both electricity provider and admin users
-    if request.user.profile.user_role not in ['electricity_provider', 'admin']:
-        return redirect('not_authorized')  # Redirect if the user is not an electricity provider or admin
-
-    # Fetch transactions for this provider, or all transactions if the user is an admin
-    if request.user.profile.user_role == 'electricity_provider':
-        transactions = Transaction.objects.filter(provider_profile=request.user.profile)
-    else:
-        transactions = Transaction.objects.all()  # Admins can view all transactions
-
-    return render(request, 'transactions.html', {'transactions': transactions})
-
-@login_required
 def orders(request):
     # Allow access for both vendor and admin users
     if request.user.profile.user_role not in ['vendor', 'admin']:
@@ -1435,6 +1893,35 @@ def orders(request):
         orders = Order.objects.all()  # Admins can view all orders
 
     return render(request, 'orders.html', {'orders': orders})
+
+def product_detail(request, product_id):
+    product = Product.objects.get(id=product_id)
+    reviews = product.reviews.all()  # Get all reviews for this product
+    
+    # Calculate the average rating using Django's aggregation feature
+    average_rating = product.reviews.aggregate(Avg('rating'))['rating__avg'] or 0  # Default to 0 if no reviews exist
+    dynamic_price = product.get_dynamic_price(1)
+
+    if request.method == 'POST':
+        review_form = ReviewForm(request.POST)
+        if review_form.is_valid():
+            # Create a new review instance
+            review = review_form.save(commit=False)
+            review.product = product
+            review.user = request.user  # Set the current user as the reviewer
+            review.save()  # Save the review
+            return redirect('product_detail', product_id=product.id)
+    else:
+        review_form = ReviewForm()
+
+    return render(request, 'product_detail.html', {
+        'product': product,
+        'reviews': reviews,
+        'average_rating': round(average_rating, 1),
+        'review_form': review_form,
+        'ratings_range': range(1, 6),
+        'dynamic_price': dynamic_price,
+    })
 
 @login_required
 def estimator(request):

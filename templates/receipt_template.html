@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Receipt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .header {
+            text-align: center;
+        }
+        .header img {
+            max-height: 80px;
+        }
+        .details {
+            margin-top: 20px;
+        }
+        .details th, .details td {
+            text-align: left;
+            padding: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a class="navbar-brand" href="{% url 'home' %}">Green Solar Panel</a>
+        <h2>Order Receipt</h2>
+        <p>Thank you for your purchase!</p>
+    </div>
+
+    <div class="details">
+        <h3>Order Details</h3>
+        <p><strong>Order ID:</strong> {{ order.id }}</p>
+        <p><strong>Date:</strong> {{ order.order_date }}</p>
+        <p><strong>Customer:</strong> {{ order.customer_profile.user.username }}</p>
+        <p><strong>Email:</strong> {{ order.customer_profile.user.email }}</p>
+
+        <h3>Items</h3>
+        <table border="1" cellspacing="0" cellpadding="5" width="100%">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Quantity</th>
+                    <th>Dynamic Price (per unit)</th>
+                    <th>Battery Cost (per unit)</th>
+                    <th>Total (per unit)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ order.product.name }}</td>
+                    <td>{{ order.quantity }}</td>
+                    <td>£{{ dynamic_price }}</td>
+                    <td>£{{ battery_cost }}</td>
+                    <td>£{{ total_per_unit }}</td>
+                    {% comment %} <td>£{{ order.product.price }}</td>
+                    <td>£{{ total_cost }}</td> {% endcomment %}
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Summary</h3>
+        <p><strong>Subtotal:</strong> £{{ subtotal }}</p>
+        <p><strong>Tax:</strong> £{{ tax }}</p>
+        <p><strong>Total:</strong> £{{ total }}</p>
+    </div>
+
+    <div class="footer">
+        <p>Green Solar Panel | Cambridge, UK | 07894561238</p>
+    </div>
+</body>
+</html>

@@ -41,6 +41,10 @@
                     <td>
                         {% if quote.status == 'expired' %}
                             <p>This quote has expired and cannot be accepted or declined.</p>
+                        {% elif quote.status == 'accepted' %}
+                            <span>Accepted</span>
+                        {% elif quote.status == 'declined' %}
+                            <span>Declined</span>
                         {% else %}
                             <a href="{% url 'accept_quote' quote.id %}" class="btn btn-success">Accept</a>
                             <a href="{% url 'decline_quote' quote.id %}" class="btn btn-danger">Decline</a>
@@ -68,7 +72,7 @@
                 <tr>
                     <th>Installer</th>
                     <th>Quote Amount</th>
-                    <th>Deadline</th>
+                    
                     <th>Details</th>
                     <th>Status</th>
                     <th>Action</th>
@@ -79,7 +83,7 @@
                 <tr>
                     <td>{{ quote.installer.user.username }}</td>
                     <td>£{{ quote.price_estimate }}</td>
-                    <td>{{ quote.quote_request.quote_deadline }}</td>
+                    
                     <td>{{ quote.notes }}</td>
                     <td>{{ quote.status|capfirst }}</td>
                     <td>

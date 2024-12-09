@@ -25,23 +25,42 @@
                 <th>Service Name</th>
                 <th>Description</th>
                 <th>Price</th>
-                <th>Panel Size Range</th>
+                <th>Panel Size</th>
                 <th>Installer Address</th>
+                <th>Ratings</th>
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            {% for service in services %}
+            {% for entry in services_with_ratings %}
             <tr>
-                <td>{{ service.installer.user.username }}</td>
-                <td>{{ service.service_name }}</td>
-                <td>{{ service.description }}</td>
-                <td>£{{ service.price }}</td>
-                <td>{{ service.panel_size_range_min }} kW to {{ service.panel_size_range_max }} kW</td>
-                <td>{{ service.installer.user.profile.address }}</td>
+                <td>{{ entry.service.installer.user.username }}</td>
+                <td>{{ entry.service.service_name }}</td>
+                <td>{{ entry.service.description }}</td>
+                <td>£{{ entry.service.price }}</td>
+                <td>{{ entry.service.panel_size }} kW</td>
+                <td>{{ entry.service.installer.user.profile.address }}</td>
                 <td>
-                    <a href="{% url 'book_service' service.id %}" class="btn btn-success">Book Now</a>
-                    
+                    <a href="{% url 'installer_details' entry.service.installer.id %}">
+                        {{ entry.service.installer.user.username }}
+                    </a>
+                    <br>
+
+                    <!-- Average Rating Section -->
+                    <div class="rating-section">
+                        <strong>Avg Rating: </strong>
+                        {% if entry.review_count > 0 %}
+                            <span class="text-warning">
+                                &#9733; {{ entry.average_rating|floatformat:1 }} / 5
+                            </span>
+                            <small class="text-muted">({{ entry.review_count }} reviews)</small>
+                        {% else %}
+                            <span class="text-muted">No ratings yet</span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>
+                    <a href="{% url 'book_service' entry.service.id %}" class="btn btn-success">Book Now</a>
                 </td>
             </tr>
             {% empty %}

@@ -97,7 +97,58 @@
                         </div>
                     {% endif %}
                 </div>
-
+                <div class="form-group mb-3">
+                    <label for="id_has_battery" class="form-label">Include Battery?</label>
+                    <input type="checkbox" name="has_battery" id="id_has_battery" 
+                           class="form-check-input" {{ form.has_battery.value|yesno:"checked," }}>
+                </div>
+                
+                <div id="battery-details" style="display: {{ form.has_battery.value|yesno:"block,none" }};">
+                    <div class="form-group mb-3">
+                        <label for="{{ form.battery_capacity.id_for_label }}" class="form-label">Battery Capacity (kWh)</label>
+                        <input type="number" step="0.01" name="battery_capacity" 
+                               id="{{ form.battery_capacity.id_for_label }}" 
+                               class="form-control" value="{{ form.battery_capacity.value }}">
+                        {% if form.battery_capacity.errors %}
+                            <div class="text-danger">
+                                {% for error in form.battery_capacity.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                
+                    <div class="form-group mb-3">
+                        <label for="{{ form.battery_type.id_for_label }}" class="form-label">Battery Type</label>
+                        <select name="battery_type" id="{{ form.battery_type.id_for_label }}" class="form-select">
+                            <option value="">--- Select Battery Type ---</option>
+                            <option value="Li-ion" {% if form.battery_type.value == 'Li-ion' %}selected{% endif %}>Lithium-Ion</option>
+                            <option value="Lead-Acid" {% if form.battery_type.value == 'Lead-Acid' %}selected{% endif %}>Lead Acid</option>
+                        </select>
+                        {% if form.battery_type.errors %}
+                            <div class="text-danger">
+                                {% for error in form.battery_type.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                
+                    <div class="form-group mb-3">
+                        <label for="{{ form.battery_cost.id_for_label }}" class="form-label">Battery Cost</label>
+                        <input type="number" step="0.01" name="battery_cost" 
+                               id="{{ form.battery_cost.id_for_label }}" 
+                               class="form-control" value="{{ form.battery_cost.value }}">
+                        {% if form.battery_cost.errors %}
+                            <div class="text-danger">
+                                {% for error in form.battery_cost.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
             </div>
         </div>
 
@@ -107,4 +158,12 @@
         </div>
     </form>
 </main>
+<script>
+    // JavaScript to toggle battery details visibility
+    const hasBatteryCheckbox = document.getElementById('id_has_battery');
+    const batteryDetailsDiv = document.getElementById('battery-details');
+    hasBatteryCheckbox.addEventListener('change', () => {
+        batteryDetailsDiv.style.display = hasBatteryCheckbox.checked ? 'block' : 'none';
+    });
+</script>
 {% endblock %}

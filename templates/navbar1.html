@@ -16,6 +16,7 @@
                         <select name="search_type" class="form-select">
                             <option value="installer">Search Installers</option>
                             <option value="product">Search Products</option>
+                            <option value="product">Battery</option>
                         </select>
                     {% elif request.user.profile.user_role == 'vendor' %}
                         <select name="search_type" class="form-select">
@@ -29,6 +30,7 @@
                         <select name="search_type" class="form-select">
                             <option value="user">Search Users</option>
                             <option value="install_request">Search Install Requests</option>
+                            <option value="product">Search Products</option>
                         </select>
                     {% endif %}
 
