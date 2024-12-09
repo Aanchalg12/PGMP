@@ -1,0 +1,69 @@
+{% extends "base1.html" %}
+
+{% block title %}Submit Review{% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Write a Review for {{ installer.user.username }}</h1>
+    </div>
+
+    <!-- Installer Ratings Summary -->
+    <div class="mb-4">
+        <h3>Average Rating: 
+            {% if review_stats.review_count > 0 %}
+                <span class="text-warning">
+                    &#9733; {{ review_stats.average_rating|floatformat:1 }} / 5
+                </span>
+                <small class="text-muted">({{ review_stats.review_count }} reviews)</small>
+            {% else %}
+                <span class="text-muted">No ratings yet</span>
+            {% endif %}
+        </h3>
+    </div>
+
+    <!-- Review Form Section -->
+    <div class="card shadow-sm p-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Your Feedback Matters</h5>
+            <p class="card-text">Please share your experience with <strong>{{ installer.user.username }}</strong>. Your review will help others make informed decisions.</p>
+
+            <!-- Review Form -->
+            <form method="POST" id="review-form">
+                {% csrf_token %}
+                {{ form.as_p }}  <!-- This renders the other form fields -->
+                <div class="star-rating mb-3">
+                    <label for="rating">Your Rating: </label>
+                    <span class="star" data-value="1">&#9734;</span>
+                    <span class="star" data-value="2">&#9734;</span>
+                    <span class="star" data-value="3">&#9734;</span>
+                    <span class="star" data-value="4">&#9734;</span>
+                    <span class="star" data-value="5">&#9734;</span>
+                    <input type="hidden" name="rating" id="rating">
+                </div>
+                <button type="submit" class="btn btn-success btn-lg w-100">Submit Review</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const stars = document.querySelectorAll(".star");
+        const ratingInput = document.getElementById("rating");
+
+        stars.forEach((star) => {
+            star.addEventListener("click", function () {
+                const value = this.getAttribute("data-value");
+                ratingInput.value = value;
+
+                // Highlight the selected stars
+                stars.forEach((s, index) => {
+                    s.innerHTML = index < value ? "&#9733;" : "&#9734;";  // Filled vs empty stars
+                });
+            });
+        });
+    });
+</script>
+
+{% endblock %}

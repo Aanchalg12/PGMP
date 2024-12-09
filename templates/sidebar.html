@@ -17,11 +17,6 @@
                 <span class="icon"><i class="bi bi-grid"></i></span>
                 <span class="description">Dashboard</span>
             </a>
-        {% elif request.user.profile.user_role == 'electricity_provider' %}
-            <a class="nav-link" href="{% url 'provider_dashboard' %}">
-                <span class="icon"><i class="bi bi-grid"></i></span>
-                <span class="description">Dashboard</span>
-            </a>
         {% elif request.user.profile.user_role == 'customer' %}
             <a class="nav-link" href="{% url 'customer_dashboard' %}">
                 <span class="icon"><i class="bi bi-grid"></i></span>
@@ -64,15 +59,18 @@
                 <span class="icon"><i class="bi bi-tools"></i></span>
                 <span class="description">Install Requests</span>
             </a>
-        {% elif request.user.profile.user_role == 'electricity_provider' %}
-            <a class="nav-link" href="{% url 'transactions' %}">
-                <span class="icon"><i class="bi bi-wallet"></i></span>
-                <span class="description">Transactions</span>
+            <a class="nav-link" href="{% url 'completed_installations' %}">
+                <span class="icon"><i class="bi bi-check-circle"></i></span>
+                <span class="description">Completed Installations</span>
             </a>
         {% elif request.user.profile.user_role == 'vendor' %}
             <a class="nav-link" href="{% url 'orders' %}">
                 <span class="icon"><i class="bi bi-box-seam"></i></span>
                 <span class="description">Orders</span>
+            </a>
+            <a class="nav-link" href="{% url 'vendor_view_quotes' %}">
+                <span class="icon"><i class="bi bi-file-earmark-text"></i></span>
+                <span class="description">View Quotes</span>
             </a>
         {% elif request.user.profile.user_role == 'customer' %}
             <a class="nav-link" href="{% url 'estimate_solar_size' %}">
@@ -90,6 +88,10 @@
             <a class="nav-link" href="{% url 'shopping_cart' %}">
                 <span class="icon"><i class="bi bi-cart"></i></span>
                 <span class="description">Shopping Cart</span>
+            </a>
+            <a class="nav-link" href="{% url 'solar_schemes' %}">
+                <span class="icon"><i class="bi bi-info-circle"></i></span>
+                <span class="description">Solar Schemes</span>
             </a>
         {% endif %}
 

@@ -1,0 +1,42 @@
+{% extends 'base1.html' %}
+{% load static %}
+{%block title %} Vendor View Quotes{% endblock %}
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h3 class="h2">Submitted Quotes </h3>
+    </div>
+    <div>
+        {% if quotes %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Quote Request</th>
+                        <th>Estimation Details</th>
+                        <th>Quote Price</th>
+                        <th>Additional Notes</th>
+                        <th>Customer Response</th>   
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quote in quotes %}
+                        <tr>
+                            <td>{{ quote.quote_request.customer_profile.user.username }}</td>
+                            <td>{{ quote.quote_request.estimation_details }}</td>
+                            <td>£{{ quote.price_estimate }}</td> 
+                            <td>{{ quote.notes }}</td>
+                            <td>{{ quote.status }}</td> 
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5">No quotes submitted yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No quotes submitted yet.</p>
+        {% endif %}
+    </div>
+</main>
+{% endblock %}

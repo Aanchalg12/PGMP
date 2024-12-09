@@ -1,0 +1,47 @@
+{% extends 'base1.html' %}
+
+{% load static %}
+{% block title %} View Product {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="h2">Product Details</h1>
+    </div>
+
+    <div class="container">
+        <div>
+            <h3>{{ product.name }}</h3>
+            <br>
+            <p><strong>Brand:</strong> {{ product.brand }}</p>
+            <p><strong>Price:</strong> £{{ product.price }}</p>
+            <p><em>Price is calculated per kW</em></p>
+            <p><strong>Stock Quantity:</strong> {{ product.stock_quantity }}</p>
+            <p><strong>Panel Size:</strong> {{ product.panel_size }} kW</p>
+            <p><strong>Description:</strong> {{ product.description }}</p>
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="Product Image" class="img-fluid" style="max-width: 300px;">
+            {% else %}
+                <img src="{% static 'images/default-placeholder.png' %}" alt="No Image" class="img-fluid">
+            {% endif %}
+        </div>
+
+        <!-- Battery Details -->
+        {% if product.has_battery %}
+        <hr>
+        <div>
+            <h4>Battery Details</h4>
+            <p><strong>Battery Capacity:</strong> {{ product.battery_capacity }} kWh</p>
+            <p><strong>Battery Type:</strong> {{ product.battery_type }}</p>
+            <p><strong>Battery Cost:</strong> £{{ product.battery_cost }}</p>
+        </div>
+        {% else %}
+        <hr>
+        <p><strong>Battery:</strong> Not included</p>
+        {% endif %}
+
+        <br>
+        <a href="{% url 'vendor_dashboard' %}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+</main>
+{% endblock %}

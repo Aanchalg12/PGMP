@@ -68,34 +68,36 @@
                 {% endfor %}
             </tbody>
         </table>
-    </section>
+    {% if active_orders|length > 0 %}
+        <a href="{% url 'orders' %}" class="btn btn-primary">View All Active Orders</a>
+    {% endif %}
+</section>
 </br>
-    <!-- Quotes Requests Table -->
-    <section>
-        <h3>Quote Requests</h3>
-        <table class="table">
-            <thead>
+<section>
+    <h3>Quote Requests</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Customer Name</th>
+                <th>Estimation Details</th>
+                <th>Quote Deadline</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quote in quote_requests %}
                 <tr>
-                    <th>Customer Name</th>
-                    <th>Estimation Details</th>
-                    <th>Quote Deadline</th>
-                    <th>Action</th>
+                    <td>{{ quote.customer_profile.user.username }}</td>
+                    <td>{{ quote.estimation_details }}</td>
+                    <td>{{ quote.quote_deadline }}</td>
+                    <td>
+                        <a href="{% url 'submit_quote' quote.id %}" class="btn btn-primary">Submit Quote</a>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                {% for quote in quote_requests %}
-                    <tr>
-                        <td>{{ quote.customer_profile.user.username }}</td>
-                        <td>{{ quote.estimation_details }}</td>
-                        <td>{{ quote.quote_deadline }}</td>
-                        <td>
-                            <a href="{% url 'submit_quote' quote.id %}" class="btn btn-primary">Submit Quote</a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </section>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
 
 </main>
 {% endblock %}

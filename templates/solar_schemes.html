@@ -1,0 +1,65 @@
+{% extends 'base1.html' %}
+{% load static %}
+{% block title %} Schemes {% endblock %}
+
+{% block content %}
+<main class="main-content min-vh-100 col-md-9 ms-sm-auto col-lg-10 px-md-4">
+    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+        <h1 class="text-center">Government Solar Panel Subsidy Schemes in the UK</h1>
+    </div>
+        <!-- List of Active Schemes -->
+        <div class="row mt-4">
+            <!-- Scheme 1 -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Smart Export Guarantee (SEG)</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>The SEG allows households to earn money for exporting surplus solar energy back to the grid.</p>
+                        <ul>
+                            <li>Eligibility: All UK households with solar installations.</li>
+                            <li>Payments depend on energy supplier rates.</li>
+                        </ul>
+                        <a href="https://www.gov.uk/government/publications/smart-export-guarantee-seg-earn-money-for-exporting-the-renewable-electricity-you-have-generated" target="_blank" class="btn btn-outline-primary btn-sm">Learn More</a>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Scheme 2 -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Energy Company Obligation (ECO4)</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>ECO4 provides funding for energy-saving measures, including solar panel installations, for low-income households.</p>
+                        <ul>
+                            <li>Eligibility: Low-income and vulnerable households.</li>
+                            <li>Support varies by energy supplier and location.</li>
+                        </ul>
+                        <a href="https://www.gov.uk/energy-company-obligation" target="_blank" class="btn btn-outline-success btn-sm">Learn More</a>
+                    </div>
+                </div>
+            </div>
+    
+            <!-- Scheme 3 -->
+            <div class="col-md-6 mb-4">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Renewable Heat Incentive (RHI)</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>The RHI offers financial incentives for generating renewable energy, including solar thermal systems.</p>
+                        <ul>
+                            <li>Eligibility: Solar thermal systems installed in homes.</li>
+                            <li>Payments are made quarterly over 7 years.</li>
+                        </ul>
+                        <a href="https://www.gov.uk/domestic-renewable-heat-incentive" target="_blank" class="btn btn-outline-info btn-sm">Learn More</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+</main>
+{% endblock %}

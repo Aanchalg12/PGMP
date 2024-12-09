@@ -1,31 +1,85 @@
 {% extends "base.html" %}
 {% load static %}
+{% block title %} Signup {% endblock %}
 {% block content %}
 <section class="p-5 mt-5">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-6">
+
                 <div class="card"> <!-- Card for the form box -->
                     <div class="card-body">
+            {% if messages %}
+                <div class="alert alert-dismissible fade show">
+                    {% for message in messages %}
+                        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
                         
                         <h2 class="mb-4 text-center">Sign Up</h2>
-                        {% if messages %}
-                        <div class="alert alert-dismissible fade show">
-                            {% for message in messages %}
-                                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
+
                         <form method="post">
                             {% csrf_token %}
-                            {{ form.as_p }}
+                            <!-- Username Field -->
+                            <div class="mb-3">
+                                {{ form.username.label }}
+                                {{ form.username }}
+                                {% if form.username.errors %}
+                                    <ul class="text-danger">
+                                        {% for error in form.username.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email Field -->
+                            <div class="mb-3">
+                                {{ form.email.label }}
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <ul class="text-danger">
+                                        {% for error in form.email.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+
+                            <!-- Password1 Field -->
+                            <div class="mb-3">
+                                {{ form.password1.label }}
+                                {{ form.password1 }}
+                                {% if form.password1.errors %}
+                                    <ul class="text-danger">
+                                        {% for error in form.password1.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+
+                            <!-- Password2 Field -->
+                            <div class="mb-3">
+                                {{ form.password2.label }}
+                                {{ form.password2 }}
+                                {% if form.password2.errors %}
+                                    <ul class="text-danger">
+                                        {% for error in form.password2.errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </div>
+
                             <button type="submit" class="btn btn-primary w-100">Sign up</button>
-                            
                         </form>
-                        </br>
+
+                        <br>
                         <p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
                         
                     </div>
@@ -34,5 +88,6 @@
         </div>
     </div>
 </section>
+
 
 {% endblock %}
